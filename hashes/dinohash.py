@@ -1,22 +1,57 @@
+"""
+This module provides functionality for loading a pre-trained DINOv2 model and generating perceptual hashes for images.
+
+Classes:
+    Hash:
+        A class to handle the perceptual hash tensor and provide various conversion methods.
+        Methods:
+            __init__(tensor: torch.Tensor):
+                Initializes the Hash object with a given tensor.
+            to_hex() -> str:
+                Converts the hash tensor to a hexadecimal string.
+            to_string() -> str:
+                Converts the hash tensor to a binary string.
+            to_pytorch() -> torch.Tensor:
+                Returns the hash tensor as a PyTorch tensor.
+            to_numpy() -> np.ndarray:
+                Returns the hash tensor as a NumPy array.
+
+Functions:
+    load_model(path: str) -> None:
+        Loads the DINOv2 model state from the specified path.
+    dinohash(image_arrays: Union[np.ndarray, List[Image.Image]]) -> torch.Tensor:
+        Generates perceptual hashes for the given images using the DINOv2 model.
+        Parameters:
+            image_arrays (Union[np.ndarray, List[Image.Image], torch.Tensor]): Input images as a numpy array or a list of PIL Images or a torch.Tensor.
+            differentiable (bool): If True, enables gradient computation. Default is False.
+            mydinov2 (torch.nn.Module): The DINOv2 model to use for generating hashes. Default is the globally loaded model.
+        Returns:
+            torch.Tensor: The generated perceptual hashes.
+
+
+"""
+
 import torch
 import numpy as np
 from torchvision import transforms
+from PIL import Image
+from typing import Union, List
+import sys
 
-def set_defense(defense_module, k=1):
-    global defense, K
-    K = k
-    defense = defense_module
 
-def set_differentiable(grad):
-    global differentiable
-    differentiable = grad
+class Hash:
+    def __init__(self, tensor: torch.Tensor):
+        self.tensor = tensor.cpu()
+        self.string = ''.join(str(int(x)) for x in self.tensor)
+        self.hex = hex(int(self.string, 2))
+        self.array = self.tensor.numpy()
 
 def load_model(path):
     global dinov2
     dinov2.load_state_dict(torch.load(path, weights_only=True))
 
 model = "vits14_reg"
-# Load model
+
 dinov2 = torch.hub.load('facebookresearch/dinov2', f'dinov2_{model}').cuda().eval()
 for param in dinov2.parameters():
     param.requires_grad = False
@@ -35,28 +70,31 @@ preprocess = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-defense = None
-K=1
+def dinohash(
+    image_arrays: Union[np.ndarray, List[Image.Image], torch.Tensor],
+    differentiable: bool = False,
+    c: int = 1,
+    logits: bool = False,
+    l2_normalize: bool = False,
+    mydinov2: torch.nn.Module = dinov2,
+    prod_output: bool = True
+    ) -> torch.Tensor:
 
-def dinohash(image_arrays, differentiable=False, c=1, logits=False, l2_normalize=False, mydinov2=dinov2):
-    # NOTE: differentiable assumes torch.Tensor input
-    # NOTE: cpu is only supported for non-differentiable
-    
     wrapper = torch.no_grad if not differentiable else torch.enable_grad
-    if not isinstance(image_arrays, torch.Tensor):
+
+    if isinstance(image_arrays, np.ndarray):
+        image_arrays = torch.from_numpy(image_arrays)
+    if isinstance(image_arrays[0], Image.Image):
         image_arrays = torch.stack([preprocess(im) for im in image_arrays])
+    if isinstance(image_arrays[0], str):
+        image_arrays = torch.stack([preprocess(Image.open(im)) for im in image_arrays])
 
     with wrapper():
-        image_arrays = image_arrays.cuda()
-        if defense is not None:
-            for _ in range(K):
-                image_arrays = defense.forward(image_arrays)
-
-        image_arrays = normalize(image_arrays)
+        image_arrays = normalize(image_arrays.cuda())
         
         outs = mydinov2(image_arrays) - means_torch
         
-        outs = outs@components_torch
+        outs = outs @ components_torch
 
         if l2_normalize:
             outs = torch.nn.functional.normalize(outs, dim=1)
@@ -67,7 +105,20 @@ def dinohash(image_arrays, differentiable=False, c=1, logits=False, l2_normalize
                 outs = torch.sigmoid(outs)
             else:
                 outs = outs >= 0
-    
+
     del image_arrays
-    
+
+    if prod_output:
+        return [Hash(out) for out in outs]
     return outs
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python dinohash.py <image_path>")
+        sys.exit(1)
+
+    image_path = sys.argv[1]
+    image = Image.open(image_path)
+    hash_tensor = dinohash([image])[0].hex
+    print("Perceptual hash:", hash_tensor)
+
