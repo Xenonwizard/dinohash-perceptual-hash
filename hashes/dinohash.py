@@ -46,6 +46,7 @@ class Hash:
         self.hex = hex(int(self.string, 2))
         self.array = self.tensor.numpy()
 
+
 def load_model(path):
     global dinov2
     dinov2.load_state_dict(torch.load(path, weights_only=True))

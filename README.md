@@ -2,6 +2,14 @@
 
 This repository provides functionality for generating perceptual hashes for images using DinoHash
 
+NOTE: we suggest using `git clone ... --depth 1` while setting up the repository since there were large files in previous commits that might cause git to malfunction
+
+## Setup
+Install the latest version of PyTorch according to your OS. Then run
+```
+pip install transformers numpy pillow
+```
+
 ## Usage
 
 ### dinohash Function
