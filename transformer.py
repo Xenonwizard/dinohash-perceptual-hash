@@ -79,8 +79,9 @@ class Transformer:
             random_text = ''.join(random.choices(string.ascii_letters, k=10))
             text = kwargs.get('text', random_text)
 
-            position = (random.randint(0, image.size[0]), random.randint(0, image.size[1]))
-            draw.text(position, text, fill="white", align="center", font=font)
+            position = (random.randint(int(image.size[0] * 0.1), int(image.size[0] * 0.3)),
+                        random.randint(int(image.size[1] * 0.1), int(image.size[1] * 0.9)))
+            draw.text(position, text, fill="blue", align="center", font=font)
             return image
         else:
             raise ValueError('Invalid method')

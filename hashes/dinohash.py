@@ -51,8 +51,8 @@ def load_model(path):
     global dinov2
     dinov2.load_state_dict(torch.load(path, weights_only=True))
 
-model = "vits14_reg"
-
+model = "vitb14_reg"
+# Load model
 dinov2 = torch.hub.load('facebookresearch/dinov2', f'dinov2_{model}').cuda().eval()
 for param in dinov2.parameters():
     param.requires_grad = False

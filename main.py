@@ -14,7 +14,7 @@ from apgd_attack import APGDAttack
 from inr import INR
 from transformer import Transformer
 from database import Database
-from hashes.dinohash import dinohash, preprocess, set_defense, dinov2, load_model
+from hashes.dinohash import dinohash, preprocess, set_defense, load_model
 
 class ImageDataset(Dataset):
     def __init__(self, image_files, transform=None):
@@ -89,7 +89,7 @@ if args.defense:
     disco_defense = BPDAWrapper(disco_defense, forwardsub=lambda x: x)
 
 if args.attack:
-    apgd = APGDAttack(eps=8/255)
+    apgd = APGDAttack(eps=4/255)
     print("Not applying any transformations since attack is enabled.")
 
 os.makedirs("databases", exist_ok=True)

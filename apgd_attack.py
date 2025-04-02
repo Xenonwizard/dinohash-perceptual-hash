@@ -1,7 +1,7 @@
 import torch
 import math
 from hashes.dinohash import dinohash
-from torch.nn.functional import binary_cross_entropy_with_logits, mse_loss, l1_loss
+from torch.nn.functional import binary_cross_entropy_with_logits
 
 def L1_norm(x, keepdim=False):
     z = x.abs().view(x.shape[0], -1).sum(-1)
@@ -25,18 +25,12 @@ def criterion_loss(x, original_logits, loss, l2_normalize=False):
     original_hash = (original_logits >= 0).float()
 
     # contains the loss for each image in the batch
-    if loss=="mse":
-        hash = dinohash(x, differentiable=True, c=15, logits=False, l2_normalize=l2_normalize)
-        loss = -(mse_loss(hash, 1-original_hash, reduction="none")).mean(1)
-    elif loss=="bce":
+    if loss=="bce":
         logits = dinohash(x, differentiable=True, c=20, logits=True, l2_normalize=l2_normalize)
         loss = -binary_cross_entropy_with_logits(logits.flatten(), 1-original_hash.flatten(), reduction="none")
         # we unflatten and average the loss (across bits) to have one loss per image       
         loss = loss.view(x.shape[0], -1).mean(1)
         hash = torch.sigmoid(logits)
-    elif loss=="mae":
-        hash = dinohash(x, differentiable=True, c=10, logits=False, l2_normalize=l2_normalize)
-        loss = l1_loss(hash, original_hash, reduction="none").mean(1)
     elif loss=="target bce":
         SCALE = 10
         logits = dinohash(x, differentiable=True, c=1, logits=True, l2_normalize=l2_normalize)
@@ -44,14 +38,8 @@ def criterion_loss(x, original_logits, loss, l2_normalize=False):
         # we unflatten and average the loss (across bits) to have one loss per image       
         loss = loss.view(x.shape[0], -1).mean(1)
         hash = torch.sigmoid(logits)
-    elif loss=="target mse":
-        logits = dinohash(x, differentiable=True, c=1, logits=True, l2_normalize=l2_normalize)
-        loss = mse_loss(logits.flatten(), original_logits.flatten(), reduction="none")
-        # we unflatten and average the loss (across bits) to have one loss per image       
-        loss = loss.view(x.shape[0], -1).mean(1)
-        hash = torch.sigmoid(logits)
     else:
-        raise ValueError("loss must be 'mse', 'mae' or 'bce'")
+        raise ValueError("loss must be 'target bce' or 'bce'")
     
     # print(logits.flatten()[:10])
     # print(original_logits.flatten()[:10])
@@ -63,7 +51,7 @@ def criterion_loss(x, original_logits, loss, l2_normalize=False):
 def hash_loss_grad(x, original_logits, loss="bce"):
     x.requires_grad = True
     
-    hash, loss = criterion_loss(x, original_logits, loss=loss)
+    hash, loss = criterion_loss(x, original_logits, loss=loss, l2_normalize=True)
 
     # contains overall sum of loss for batch, we dont use mean
     loss_sum = loss.sum()
@@ -139,16 +127,16 @@ def L1_projection(x2, y2, eps1):
 class APGDAttack():
     def __init__(
             self,
+            eps,
             norm='Linf',
-            eps=None,
             seed=0,
             rho=.75,
             topk=None,
             verbose=False,
             device="cuda"):
         
-        self.eps = eps
         self.norm = norm
+        self.eps = eps
         self.seed = seed
         self.thr_decr = rho
         self.topk = topk
@@ -157,7 +145,6 @@ class APGDAttack():
         self.use_rs = True
 
         assert self.norm in ['Linf', 'L2', 'L1']
-        assert not self.eps is None
 
     def check_oscillation(self, x, j, k, y5, k3=0.75):
         t = torch.zeros(x.shape[1]).to(self.device)
@@ -185,7 +172,10 @@ class APGDAttack():
         return x / (t.view(-1, *([1] * self.n_dims)) + 1e-12)
 
     @torch.no_grad()
-    def attack_single_run(self, x, original_logits, n_iter=50, log=False):
+    def attack_single_run(self, x, original_logits, n_iter=50, eps=None, log=False):
+        
+        if eps is not None:
+            self.eps = eps
 
         original_hash = (original_logits >= 0).float()
         x = x.to(device=self.device)
