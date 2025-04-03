@@ -53,7 +53,7 @@ def load_model(path):
 
 model = "vitb14_reg"
 # Load model
-dinov2 = torch.hub.load('facebookresearch/dinov2', f'dinov2_{model}').cuda().eval()
+dinov2 = torch.hub.load('facebookresearch/dinov2', f'dinov2_{model}').cuda()
 for param in dinov2.parameters():
     param.requires_grad = False
 dinov2.eval()

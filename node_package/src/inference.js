@@ -46,37 +46,15 @@ async function preprocessImage(image) {
  * Runs inference on an image using a loaded model
  * @param {Object} model - Loaded TorchScript model
  * @param {string|Buffer} image - Path to image or image buffer
- * @param {Object} options - Inference options
- * @param {Object} options.preprocess - Preprocessing options
- * @returns {Promise<Object>} - Hashing results
+ * @returns {Promise<Array>} - Array of boolean values representing the hash
  */
-async function hash(model, image, options = {}) {
+async function hash(model, image) {
   try {
-    const tensor = await preprocessImage(image, options.preprocess);
-    const batchedTensor = tensor.unsqueeze(0);
-    const output = model.forward(batchedTensor);
-    const predictions = output.toObject();
-    
-    // Get the top predictions
-    const scores = predictions.data;
-    const indices = Array.from({ length: scores.length }, (_, i) => i)
-      .sort((a, b) => scores[b] - scores[a]);
-    
-    // Load labels if provided
-    let labels = null;
-    if (options.labelsPath && fs.existsSync(options.labelsPath)) {
-      const labelsContent = await fs.readFile(options.labelsPath, 'utf-8');
-      labels = labelsContent.split('\n').filter(Boolean);
-    }
-    
-    // Format results
-    const results = indices.map((idx) => ({
-      classIndex: idx,
-      className: labels ? labels[idx] : `Class ${idx}`,
-      score: scores[idx]
-    }));
-    
-    return results;
+    const tensor = await preprocessImage(image).unsqueeze(0);
+    const output = model.forward(tensor).squeeze(0).toObject();
+    const hash = Array.from(output, (x) => x > 0)
+
+    return hash;
   } catch (error) {
     console.error('Error during inference:', error.message);
     throw error;
