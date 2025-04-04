@@ -26,14 +26,14 @@ def criterion_loss(x, original_logits, loss, l2_normalize=False):
 
     # contains the loss for each image in the batch
     if loss=="bce":
-        logits = dinohash(x, differentiable=True, c=20, logits=True, l2_normalize=l2_normalize)
+        logits = dinohash(x, differentiable=True, c=20, logits=True, l2_normalize=l2_normalize, prod_output=False)
         loss = -binary_cross_entropy_with_logits(logits.flatten(), 1-original_hash.flatten(), reduction="none")
         # we unflatten and average the loss (across bits) to have one loss per image       
         loss = loss.view(x.shape[0], -1).mean(1)
         hash = torch.sigmoid(logits)
     elif loss=="target bce":
         SCALE = 10
-        logits = dinohash(x, differentiable=True, c=1, logits=True, l2_normalize=l2_normalize)
+        logits = dinohash(x, differentiable=True, c=1, logits=True, l2_normalize=l2_normalize, prod_output=False)
         loss = binary_cross_entropy_with_logits(logits.flatten() * SCALE, torch.sigmoid(original_logits * SCALE).flatten(), reduction="none")
         # we unflatten and average the loss (across bits) to have one loss per image       
         loss = loss.view(x.shape[0], -1).mean(1)

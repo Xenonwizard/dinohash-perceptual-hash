@@ -6,40 +6,29 @@ const path = require('path');
 /**
  * Preprocess an image for model input
  * @param {string|Buffer} image - Path to image or image buffer
- * @param {Object} options - Preprocessing options
- * @param {number[]} options.inputShape - Shape of the input tensor [channels, height, width]
- * @param {number[]} options.mean - Mean values for normalization [r, g, b]
- * @param {number[]} options.std - Standard deviation values for normalization [r, g, b]
  * @returns {Promise<Object>} - Preprocessed tensor
  */
+
 async function preprocessImage(image) {
-  const inputShape = [3, 224, 224];
+
+  const inputShape = [1, 3, 224, 224];
   const mean = [0.485, 0.456, 0.406];
   const std = [0.229, 0.224, 0.225];
+
+  const imageData = await Jimp.read(image);
+  imageData.resize(224, 224);
   
-  // Load image using Jimp
-  const jimpImage = typeof image === 'string' 
-    ? await Jimp.read(image)
-    : await Jimp.read(Buffer.from(image));
-  
-  jimpImage.resize(inputShape[2], inputShape[1]);
-  
-  // Create a Float32Array to hold the image data
-  const buffer = new Float32Array(inputShape[0] * inputShape[1] * inputShape[2]);
-  
-  // Convert image to normalized values
-  let idx = 0;
-  for (let c = 0; c < inputShape[0]; c++) {
-    for (let h = 0; h < inputShape[1]; h++) {
-      for (let w = 0; w < inputShape[2]; w++) {
-        const pixel = Jimp.intToRGBA(jimpImage.getPixelColor(w, h));
-        const value = (pixel[c] / 255.0 - mean[c]) / std[c];
-        buffer[idx++] = value;
-      }
-    }
-  }
-  
-  return torch.tensor(buffer, { shape: inputShape });
+  const pixelData = new Float32Array(3 * 224 * 224);
+  let offset = 0;
+
+  imageData.scan(0, 0, imageData.bitmap.width, imageData.bitmap.height, (x, y, idx) => {
+    pixelData[offset] = (imageData.bitmap.data[idx + 0] / 255 - mean[0]) / std[0];
+    pixelData[offset + 1 * 224 * 224] = (imageData.bitmap.data[idx + 1] / 255 - mean[1]) / std[1];
+    pixelData[offset + 2 * 224 * 224] = (imageData.bitmap.data[idx + 2] / 255 - mean[2]) / std[2];
+    offset++;
+  });
+
+  return new ort.Tensor('float32', pixelData, inputShape);
 }
 
 /**
@@ -50,9 +39,12 @@ async function preprocessImage(image) {
  */
 async function hash(model, image) {
   try {
-    const tensor = await preprocessImage(image).unsqueeze(0);
-    const output = model.forward(tensor).squeeze(0).toObject();
-    const hash = Array.from(output, (x) => x > 0)
+    const tensor = await preprocessImage(image);
+    const feeds = { [session.inputNames[0]]: tensor };
+    
+    const results = await session.run(feeds);
+    const outputTensor = results[session.outputNames[0]];
+    const hash = Array.from(outputTensor.data, (x) => x > 0)
 
     return hash;
   } catch (error) {

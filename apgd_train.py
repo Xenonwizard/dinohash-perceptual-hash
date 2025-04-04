@@ -119,7 +119,7 @@ while step_total < args.steps:
     accuracy_meter = AverageMeter('Accuracy')
 
     for images in pbar:
-        logits = dinohash(images, differentiable=False, logits=True, mydinov2=clean_dinov2).float().cuda()
+        logits = dinohash(images, differentiable=False, logits=True, mydinov2=clean_dinov2, prod_output=False).float().cuda()
 
         scheduler(step_total)
         n_iter = np.random.randint(args.n_iter - args.n_iter_range,
@@ -176,15 +176,15 @@ while step_total < args.steps:
             n_images = 0
 
             for images in test_loader:
-                logits = dinohash(images, differentiable=False, logits=True, mydinov2=clean_dinov2).float().cuda()
+                logits = dinohash(images, differentiable=False, logits=True, mydinov2=clean_dinov2, prod_output=False).float().cuda()
                 hashes = (logits >= 0).float()
 
                 adv_images, _ = apgd.attack_single_run(images, logits, n_iter=args.n_iter *2, eps=args.epsilon)
 
-                adv_hashes = dinohash(adv_images).float()
+                adv_hashes = dinohash(adv_images, prod_output=False).float()
                 accuracy = (adv_hashes - hashes).cpu().abs().mean().item()
 
-                clean_hashes = dinohash(images).float()
+                clean_hashes = dinohash(images, prod_output=False).float()
                 clean_accuracy = (clean_hashes - hashes).cpu().abs().mean().item()
 
                 total_strength += accuracy * len(images)
