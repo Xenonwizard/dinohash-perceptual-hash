@@ -10,17 +10,14 @@
       "pytorch",
       "machine-learning",
       "phash",
-      "inference",
-      "torchscript"
+      "onnx"
     ],
     "author": "",
     "license": "MIT",
     "dependencies": {
-      "@idn/torchjs": "^0.2.0",
-      "axios": "^1.6.2",
-      "fs-extra": "^11.1.1",
-      "jimp": "^0.22.10",
-      "progress": "^2.0.3"
+      "onnxruntime-node": "latest",
+      "axios": "latest",
+      "jimp": "latest",
+      "progress": "latest"
     }
   }
-  
