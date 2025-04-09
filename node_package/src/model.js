@@ -3,7 +3,7 @@ const fs = require('fs');
 
 let sessionCache = null;
 
-async function loadModel(modelPath, options = { cache: true }) {
+async function loadModel(modelPath, options = { cache: true, device: 'cpu' }) {
   try {
     if (!fs.existsSync(modelPath)) {
       throw new Error(`Model not found at ${modelPath}`);
@@ -16,12 +16,11 @@ async function loadModel(modelPath, options = { cache: true }) {
     console.log(`Loading ONNX model from ${modelPath}`);
     
     const sessionOptions = {
-      executionProviders: ['cpu'], // Change to 'cuda' for GPU support
+      executionProviders: [options.device],
       graphOptimizationLevel: 'all'
     };
 
     const session = await ort.InferenceSession.create(modelPath, sessionOptions);
-    
     if (options.cache) {
       sessionCache = session;
     }

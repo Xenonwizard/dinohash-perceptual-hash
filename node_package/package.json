@@ -1,23 +1,24 @@
 {
-    "name": "proteus-dinohash",
+    "name": "dinohash",
     "version": "1.0.0",
-    "description": "Run DinoHash model in Node.js",
-    "main": "index.js",
     "scripts": {
       "test": "echo \"Error: no test specified\" && exit 1"
     },
+    "description": "Run the DinoHash model from https://www.arxiv.org/abs/2503.11195 in Node.js",
+    "main": "index.js",
     "keywords": [
-      "pytorch",
+      "cryptogrtaphy",
       "machine-learning",
       "phash",
       "onnx"
     ],
-    "author": "",
+    "author": "Shree Singhi <singhishree@gmail.com>",
     "license": "MIT",
     "dependencies": {
-      "onnxruntime-node": "latest",
-      "axios": "latest",
-      "jimp": "latest",
-      "progress": "latest"
+      "onnxruntime-node": "1.21.0",
+      "axios": "1.8.4",
+      "jimp": "1.6.0",
+      "progress": "2.0.3",
+      "fs-extra": "11.3.0"
     }
   }

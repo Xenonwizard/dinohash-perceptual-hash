@@ -1,8 +1,5 @@
-const torch = require('@idn/torchjs');
-const Jimp = require('jimp');
-const fs = require('fs-extra');
-const path = require('path');
-
+const { Jimp } = require('jimp');
+const ort = require('onnxruntime-node');
 /**
  * Preprocess an image for model input
  * @param {string|Buffer} image - Path to image or image buffer
@@ -16,8 +13,11 @@ async function preprocessImage(image) {
   const std = [0.229, 0.224, 0.225];
 
   const imageData = await Jimp.read(image);
-  imageData.resize(224, 224);
-  
+
+  imageData.resize({ w:224, h:224 });
+
+  await imageData.write("test-small.jpg");
+
   const pixelData = new Float32Array(3 * 224 * 224);
   let offset = 0;
 
@@ -37,11 +37,12 @@ async function preprocessImage(image) {
  * @param {string|Buffer} image - Path to image or image buffer
  * @returns {Promise<Array>} - Array of boolean values representing the hash
  */
-async function hash(model, image) {
+async function hash(session, image) {
   try {
     const tensor = await preprocessImage(image);
+
     const feeds = { [session.inputNames[0]]: tensor };
-    
+
     const results = await session.run(feeds);
     const outputTensor = results[session.outputNames[0]];
     const hash = Array.from(outputTensor.data, (x) => x > 0)

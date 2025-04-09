@@ -1,16 +1,15 @@
-const { downloadModel, loadModel, classify } = require('../index');
+const { downloadModel, loadModel, hash } = require('../index');
 const path = require('path');
 
 async function main() {
   try {
-    const modelUrl = 'https://huggingface.co/backslashh/dinov2_vits14_reg_96bit/resolve/main/dinov2_vits14_reg_96bit.pt';
-    const modelPath = path.join(__dirname, '../models/dinov2_vits14_reg_96bit.pt');
-    const imagePath = path.join(__dirname, 'test.jpg');
+    const modelUrl = 'https://huggingface.co/backslashh/dinov2_vits14_reg_96bit/resolve/main/dinov2_vits14_reg_96bit.onnx';
+    const modelPath = path.join(__dirname, '../models/dinov2_vits14_reg_96bit.onnx');
+    const imagePath = path.join(__dirname, 'test.png');
     
     await downloadModel(modelUrl, modelPath);
-    const model = loadModel(modelPath);
-
-    const results = await hash(model, imagePath);
+    const session = await loadModel(modelPath, device='cpu'); // can use 'cuda' for GPU inference if you have the right setup
+    const results = await hash(session, imagePath);
     console.log(results);
 
   } catch (error) {
