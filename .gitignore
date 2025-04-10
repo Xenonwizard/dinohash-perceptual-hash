@@ -18,3 +18,4 @@
 /databases/
 /node_package/node_modules
 /node_package/package-lock.json
+/node_package/models/

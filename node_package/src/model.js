@@ -15,12 +15,12 @@ async function loadModel(modelPath, options = { cache: true, device: 'cpu' }) {
 
     console.log(`Loading ONNX model from ${modelPath}`);
     
-    const sessionOptions = {
-      executionProviders: [options.device],
-      graphOptimizationLevel: 'all'
-    };
+    const session = await ort.InferenceSession.create(
+      modelPath,
+      executionProviders=[options.device],
+      graphOptimizationLevel='all'
+    );
 
-    const session = await ort.InferenceSession.create(modelPath, sessionOptions);
     if (options.cache) {
       sessionCache = session;
     }

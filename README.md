@@ -4,6 +4,9 @@ This repository provides functionality for generating perceptual hashes for imag
 
 NOTE: we suggest using `git clone ... --depth 1` while setting up the repository since there were large files in previous commits that might cause git to malfunction
 
+## Node.js Implementation
+To use the Node.js package look at the README in the `node_package` folder
+
 ## Setup
 Install the latest version of PyTorch according to your OS. Then run
 ```

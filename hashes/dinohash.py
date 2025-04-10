@@ -27,8 +27,6 @@ Functions:
             mydinov2 (torch.nn.Module): The DINOv2 model to use for generating hashes. Default is the globally loaded model.
         Returns:
             torch.Tensor: The generated perceptual hashes.
-
-
 """
 
 import torch

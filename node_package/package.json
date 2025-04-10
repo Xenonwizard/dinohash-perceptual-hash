@@ -1,24 +1,36 @@
 {
-    "name": "dinohash",
-    "version": "1.0.0",
+    "name": "@proteus-labs/dinohash",
+    "version": "1.4.0",
     "scripts": {
-      "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1"
     },
     "description": "Run the DinoHash model from https://www.arxiv.org/abs/2503.11195 in Node.js",
     "main": "index.js",
     "keywords": [
-      "cryptogrtaphy",
-      "machine-learning",
-      "phash",
-      "onnx"
+        "cryptography",
+        "machine-learning",
+        "phash",
+        "computer-vision"
     ],
     "author": "Shree Singhi <singhishree@gmail.com>",
     "license": "MIT",
     "dependencies": {
-      "onnxruntime-node": "1.21.0",
-      "axios": "1.8.4",
-      "jimp": "1.6.0",
-      "progress": "2.0.3",
-      "fs-extra": "11.3.0"
-    }
-  }
+        "onnxruntime-node": "1.21.0",
+        "axios": "1.8.4",
+        "jimp": "1.6.0",
+        "progress": "2.0.3",
+        "fs-extra": "11.3.0"
+    },
+    "directories": {
+        "example": "examples"
+    },
+    "devDependencies": {},
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/proteus-photos/dinohash-perceptual-hash.git"
+    },
+    "bugs": {
+        "url": "https://github.com/proteus-photos/dinohash-perceptual-hash/issues"
+    },
+    "homepage": "https://www.proteus.photos/"
+}

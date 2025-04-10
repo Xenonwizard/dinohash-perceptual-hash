@@ -16,8 +16,6 @@ async function preprocessImage(image) {
 
   imageData.resize({ w:224, h:224 });
 
-  await imageData.write("test-small.jpg");
-
   const pixelData = new Float32Array(3 * 224 * 224);
   let offset = 0;
 
