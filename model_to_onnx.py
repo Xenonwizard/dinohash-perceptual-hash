@@ -36,8 +36,8 @@ def my_interpolate_pos_encoding(self, x, w, h):
     patch_pos_embed = patch_pos_embed.permute(0, 2, 3, 1).view(1, -1, dim)
     return torch.cat((class_pos_embed.unsqueeze(0), patch_pos_embed), dim=1).to(previous_dtype)
 
-model_name = "vits14_reg"
-path = "./train_models/dinov2_0.0001_500.0_20000_10.pth"
+model_name = "vitb14_reg"
+path = "./dinov2_0.0001_500_17982_20.pth"
 
 # load model
 dinov2 = torch.hub.load('facebookresearch/dinov2', f'dinov2_{model_name}').eval()
@@ -60,8 +60,23 @@ model = nn.Sequential(
     linear
 )
 
-example = torch.rand(1, 3, 224, 224)
+batch_size = 42  # can be set to anything
+example = torch.rand(batch_size, 3, 224, 224)
 
-onnx_program = torch.onnx.export(model, example, dynamo=True)
+dynamic_axes = {
+    'input': {0: 'batch_size'},
+    'output': {0: 'batch_size'}
+}
+
+onnx_program = torch.onnx.export(
+    model,
+    example,
+    dynamo=True,
+    input_names=['input'],
+    output_names=['output'],
+    dynamic_axes=dynamic_axes,
+    do_constant_folding=True
+)
+
 onnx_program.optimize()
-onnx_program.save(f"dinov2_{model_name}_{components.shape[1]}bit.onnx")
+onnx_program.save(f"dinov2_{model_name}_{components.shape[1]}bit_dynamic.onnx")

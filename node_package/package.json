@@ -15,16 +15,16 @@
     "author": "Shree Singhi <singhishree@gmail.com>",
     "license": "MIT",
     "dependencies": {
-        "onnxruntime-node": "1.21.0",
+        "@proteus-labs/dinohash": "^1.4.0",
         "axios": "1.8.4",
+        "fs-extra": "11.3.0",
         "jimp": "1.6.0",
-        "progress": "2.0.3",
-        "fs-extra": "11.3.0"
+        "onnxruntime-node": "1.21.0",
+        "progress": "2.0.3"
     },
     "directories": {
         "example": "examples"
     },
-    "devDependencies": {},
     "repository": {
         "type": "git",
         "url": "git+https://github.com/proteus-photos/dinohash-perceptual-hash.git"

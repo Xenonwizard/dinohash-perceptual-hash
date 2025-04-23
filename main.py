@@ -8,13 +8,11 @@ from scipy.stats import binom
 import pandas as pd
 from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import functional as F
-from advertorch.bpda import BPDAWrapper
 
 from apgd_attack import APGDAttack
-from inr import INR
 from transformer import Transformer
 from database import Database
-from hashes.dinohash import dinohash, preprocess, set_defense, load_model
+from hashes.dinohash import dinohash, preprocess, load_model
 
 class ImageDataset(Dataset):
     def __init__(self, image_files, transform=None):
@@ -69,8 +67,6 @@ BATCH_SIZE = 256
 
 parser = argparse.ArgumentParser(description ='Perform retrieval benchmarking.')
 parser.add_argument('-r', '--refresh', action='store_true')
-parser.add_argument('--defense', dest='defense', type=str, default=None,
-                    help='path to defense model')
 parser.add_argument('--checkpoint', dest='checkpoint', type=str, default=None,
                     help='path to checkpoint')
 parser.add_argument('--attack', action='store_true')
@@ -83,10 +79,6 @@ t = Transformer()
 
 if args.checkpoint is not None:
     load_model(args.checkpoint)
-
-if args.defense:
-    disco_defense = INR(device='cuda', pretrain_inr_path=args.defense)
-    disco_defense = BPDAWrapper(disco_defense, forwardsub=lambda x: x)
 
 if args.attack:
     apgd = APGDAttack(eps=4/255)
@@ -116,14 +108,8 @@ dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=False, num_worke
 for images, transformed_images in tqdm(dataloader):
     # copy = transformed_images.detach().clone()
     if args.attack:
-        set_defense(None)
         original_logits = hasher(images, logits=True)
     
-    if args.defense:
-        k = 2 #np.random.randint(1, 6)
-        set_defense(disco_defense, k=k)
-    
-    if args.attack:
         transformed_images, _ = apgd.attack_single_run(transformed_images, original_logits, n_iter=50)
 
         # we technically don't need to do this but
