@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/822733254.svg)](https://doi.org/10.5281/zenodo.15525403) [![arXiv](https://img.shields.io/badge/arXiv-10.48550/arXiv.2503.11195-b31b1b.svg)](https://doi.org/10.48550/arXiv.2503.11195)
+[![DOI](https://zenodo.org/badge/822733254.svg)](https://doi.org/10.5281/zenodo.15525403) [![arXiv](https://img.shields.io/badge/arXiv-10.48550/arXiv.2503.11195-b31b1b.svg)](https://doi.org/10.48550/arXiv.2503.11195) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/proteus-photos/dinohash-perceptual-hash)
 
 # DINOHash Perceptual Hash
 
