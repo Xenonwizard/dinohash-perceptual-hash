@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/822733254.svg)](https://doi.org/10.5281/zenodo.15525403) [![arXiv](https://img.shields.io/badge/arXiv-10.48550/arXiv.2503.11195-b31b1b.svg)](https://doi.org/10.48550/arXiv.2503.11195)
+
 # DINOHash Perceptual Hash
 
 This repository provides functionality for generating perceptual hashes for images using DinoHash
