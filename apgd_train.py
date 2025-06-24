@@ -102,7 +102,7 @@ train_dataset, test_dataset = random_split(dataset, [int(SPLIT_RATIO*len(dataset
 train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=11)
 test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=11)
 
-apgd = APGDAttack(eps=args.epsilon)
+apgd = APGDAttack(dinohash=adversarial_dinohash, eps=args.epsilon)
 
 if args.resume_path is not None:
     adversarial_dinohash.load_model(args.resume_path)
@@ -178,15 +178,15 @@ while step_total < args.steps:
             n_images = 0
 
             for images in test_loader:
-                logits = clean_dinohash.dinohash(images, differentiable=False, logits=True).float().cuda()
+                logits = clean_dinohash.hash(images, differentiable=False, logits=True).float().cuda()
                 hashes = (logits >= 0).float()
 
                 adv_images, _ = apgd.attack_single_run(images, logits, n_iter=args.n_iter *2, eps=args.epsilon)
 
-                adv_hashes = adversarial_dinohash.dinohash(adv_images).float()
+                adv_hashes = adversarial_dinohash.hash(adv_images).float()
                 accuracy = (adv_hashes - hashes).cpu().abs().mean().item()
 
-                clean_hashes = adversarial_dinohash.dinohash(images).float()
+                clean_hashes = adversarial_dinohash.hash(images).float()
                 clean_accuracy = (clean_hashes - hashes).cpu().abs().mean().item()
 
                 total_strength += accuracy * len(images)

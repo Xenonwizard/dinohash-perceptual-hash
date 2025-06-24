@@ -8,7 +8,7 @@ import torchvision.transforms as T
 from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
 import torch
-from temp_neuralhash import NeuralHash
+from paper_results.temp_neuralhash import NeuralHash
 
 from hashes.dinohash import dinohash, dinov2
 from apgd_attack import APGDAttack

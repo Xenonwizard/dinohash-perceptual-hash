@@ -1,6 +1,5 @@
 import torch
 import math
-from hashes.dinohash import dinohash
 from torch.nn.functional import binary_cross_entropy_with_logits
 
 def L1_norm(x, keepdim=False):
@@ -21,19 +20,19 @@ def L0_norm(x):
 def project(x_adv, x0, epsilon):
     return x_adv.clamp(x0-epsilon, x0+epsilon).clamp(0, 1)
 
-def criterion_loss(x, original_logits, loss, l2_normalize=False):
+def criterion_loss(x, original_logits, hasher, loss, l2_normalize=False):
     original_hash = (original_logits >= 0).float()
 
     # contains the loss for each image in the batch
     if loss=="bce":
-        logits = dinohash(x, differentiable=True, c=20, logits=True, l2_normalize=l2_normalize, prod_output=False)
+        logits = hasher(x, differentiable=True, c=20, logits=True, l2_normalize=l2_normalize)
         loss = -binary_cross_entropy_with_logits(logits.flatten(), 1-original_hash.flatten(), reduction="none")
         # we unflatten and average the loss (across bits) to have one loss per image       
         loss = loss.view(x.shape[0], -1).mean(1)
         hash = torch.sigmoid(logits)
     elif loss=="target bce":
         SCALE = 10
-        logits = dinohash(x, differentiable=True, c=1, logits=True, l2_normalize=l2_normalize, prod_output=False)
+        logits = hasher(x, differentiable=True, c=1, logits=True, l2_normalize=l2_normalize)
         loss = binary_cross_entropy_with_logits(logits.flatten() * SCALE, torch.sigmoid(original_logits * SCALE).flatten(), reduction="none")
         # we unflatten and average the loss (across bits) to have one loss per image       
         loss = loss.view(x.shape[0], -1).mean(1)
@@ -48,10 +47,10 @@ def criterion_loss(x, original_logits, loss, l2_normalize=False):
     return hash, loss
 
 @torch.enable_grad()
-def hash_loss_grad(x, original_logits, loss="bce"):
+def hash_loss_grad(x, original_logits, hasher, loss="bce"):
     x.requires_grad = True
     
-    hash, loss = criterion_loss(x, original_logits, loss=loss, l2_normalize=True)
+    hash, loss = criterion_loss(x, original_logits, hasher, loss=loss, l2_normalize=True)
 
     # contains overall sum of loss for batch, we dont use mean
     loss_sum = loss.sum()
@@ -127,6 +126,7 @@ def L1_projection(x2, y2, eps1):
 class APGDAttack():
     def __init__(
             self,
+            dinohash,
             eps,
             norm='Linf',
             seed=0,
@@ -135,6 +135,7 @@ class APGDAttack():
             verbose=False,
             device="cuda"):
         
+        self.hasher = dinohash.hash
         self.norm = norm
         self.eps = eps
         self.seed = seed
@@ -211,7 +212,7 @@ class APGDAttack():
         
         grad = torch.zeros_like(x)
 
-        hash, loss_indiv, grad = hash_loss_grad(x_adv, original_logits)
+        hash, loss_indiv, grad = hash_loss_grad(x_adv, original_logits, self.hasher)
 
         # print("Initial Distance: ", (hash - original_hash).abs().mean().item())
         
@@ -325,26 +326,3 @@ class APGDAttack():
                 counter3 = 0
     
         return (x_best, loss_best)
-
-    def decr_eps_pgd(self, x, y, epss, iters, use_rs=True):
-        assert len(epss) == len(iters)
-        assert self.norm in ['L1']
-        self.use_rs = False
-        if not use_rs:
-            x_init = None
-        else:
-            x_init = x + torch.randn_like(x)
-            x_init += L1_projection(x, x_init - x, 1. * float(epss[0]))
-        if self.verbose:
-            print('total iter: {}'.format(sum(iters)))
-        for eps, niter in zip(epss, iters):
-            if self.verbose:
-                print('using eps: {:.2f}'.format(eps))
-            self.n_iter = niter + 0
-            self.eps = eps + 0.
-            #
-            if not x_init is None:
-                x_init += L1_projection(x, x_init - x, 1. * eps)
-            x_init, acc, loss, x_adv = self.attack_single_run(x, y, x_init=x_init)
-
-        return (x_init, acc, loss, x_adv)
