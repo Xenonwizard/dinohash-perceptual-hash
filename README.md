@@ -34,14 +34,17 @@ The `dinohash` function generates perceptual hashes for the given images using t
 ```python
 from PIL import Image
 import torch
-from dinohash import dinohash
+from dinohash import DINOHash
 
 # Load an image
 image_path = "path/to/your/image.jpg"
 image = Image.open(image_path)
 
+# Create DINOHash instance
+dinohash = DINOHash()
+
 # Generate perceptual hash
-hashes = dinohash([image])
+hashes = dinohash.hash([image])
 
 # Print the hexadecimal representation of the hash
 print("Perceptual hash:", hashes[0].hex)

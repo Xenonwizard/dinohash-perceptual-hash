@@ -9,7 +9,7 @@ from tqdm import tqdm
 import copy
 
 import numpy as np
-from hashes.dinohash import preprocess, dinov2, dinohash, load_model
+from hashes.dinohash import DINOHash, preprocess
 import torch
 from apgd_attack import APGDAttack, criterion_loss
 from utils import AverageMeter
@@ -81,17 +81,19 @@ parser.add_argument('--resume_path', dest='resume_path', type=str, default=None,
                     help='resume path')
 
 args = parser.parse_args()
-os.makedirs('./adversarial_dataset', exist_ok=True)
 
 image_files = [os.path.join(args.image_dir, f) for f in os.listdir(args.image_dir) if os.path.isfile(os.path.join(args.image_dir, f))]
 image_files.sort()
 image_files = image_files[:1_800_000]
 
+clean_dinohash = DINOHash(model="vits14_reg", pca_dims=96, prod_mode=False,)
+adversarial_dinohash = DINOHash(model="vits14_reg", pca_dims=96, prod_mode=False)
+
 dataset = ImageDataset(image_files)
-clean_dinov2 = copy.deepcopy(dinov2)
-for param in clean_dinov2.parameters():
+
+for param in clean_dinohash.dinov2.parameters():
     param.requires_grad = False
-clean_dinov2.eval()
+clean_dinohash.dinov2.eval()
 
 complete_loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False)
 
@@ -103,14 +105,14 @@ test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False
 apgd = APGDAttack(eps=args.epsilon)
 
 if args.resume_path is not None:
-    load_model(args.resume_path)
+    adversarial_dinohash.load_model(args.resume_path)
 
-optimizer = AdamW(dinov2.parameters(), lr=args.lr, weight_decay=args.weight_decay, betas=(0.9, 0.95))
+optimizer = AdamW(adversarial_dinohash.dinov2.parameters(), lr=args.lr, weight_decay=args.weight_decay, betas=(0.9, 0.95))
 scheduler = cosine_lr(optimizer, args.lr, args.warmup, args.steps)
 step_total = args.start_step
 epoch_total = 0
 
-for param in dinov2.parameters():
+for param in adversarial_dinohash.dinov2.parameters():
     param.requires_grad = True
 
 while step_total < args.steps:
@@ -119,7 +121,7 @@ while step_total < args.steps:
     accuracy_meter = AverageMeter('Accuracy')
 
     for images in pbar:
-        logits = dinohash(images, differentiable=False, logits=True, mydinov2=clean_dinov2, prod_output=False).float().cuda()
+        logits = clean_dinohash.hash(images, differentiable=False, logits=True).float().cuda()
 
         scheduler(step_total)
         n_iter = np.random.randint(args.n_iter - args.n_iter_range,
@@ -133,7 +135,7 @@ while step_total < args.steps:
 
         # adv_images = images.cuda()
 
-        dinov2.train()
+        adversarial_dinohash.dinov2.train()
         adv_hashes, adv_loss = criterion_loss(adv_images, logits, loss="target bce")
 
         adv_loss = adv_loss.mean()
@@ -169,22 +171,22 @@ while step_total < args.steps:
         del hashes, logits, images, adv_images, adv_hashes
 
         if step_total % args.val_freq == 0:
-            dinov2.eval()
+            adversarial_dinohash.dinov2.eval()
 
             total_strength = 0
             total_accuracy = 0
             n_images = 0
 
             for images in test_loader:
-                logits = dinohash(images, differentiable=False, logits=True, mydinov2=clean_dinov2, prod_output=False).float().cuda()
+                logits = clean_dinohash.dinohash(images, differentiable=False, logits=True).float().cuda()
                 hashes = (logits >= 0).float()
 
                 adv_images, _ = apgd.attack_single_run(images, logits, n_iter=args.n_iter *2, eps=args.epsilon)
 
-                adv_hashes = dinohash(adv_images, prod_output=False).float()
+                adv_hashes = adversarial_dinohash.dinohash(adv_images).float()
                 accuracy = (adv_hashes - hashes).cpu().abs().mean().item()
 
-                clean_hashes = dinohash(images, prod_output=False).float()
+                clean_hashes = adversarial_dinohash.dinohash(images).float()
                 clean_accuracy = (clean_hashes - hashes).cpu().abs().mean().item()
 
                 total_strength += accuracy * len(images)
@@ -199,6 +201,6 @@ while step_total < args.steps:
             break
         
     print(f"step: {step_total}, loss: {loss_meter.avg:.4f}, accuracy: {accuracy_meter.avg:.4f}")
-    torch.save(dinov2.state_dict(), f'./dinov2_{args.lr}_{args.clean_weight}_{step_total}_{args.n_iter}.pth')
+    torch.save(adversarial_dinohash.dinov2.state_dict(), f'./dinov2_{args.lr}_{args.clean_weight}_{step_total}_{args.n_iter}.pth')
 
     del loss_meter, accuracy_meter
