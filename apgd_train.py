@@ -79,15 +79,19 @@ parser.add_argument('--val_freq', dest='val_freq', type=int, default=500,
                     help='validation frequency')
 parser.add_argument('--resume_path', dest='resume_path', type=str, default=None,
                     help='resume path')
+parser.add_argument('--n_bits', dest='n_bits', type=int, default=96,
+                    help='number of PCA components for DINOHash')
+parser.add_argument('--model_name', dest='model_name', type=str, default="vits14_reg",
+                    help='model backbone for DINOv2')
 
 args = parser.parse_args()
 
 image_files = [os.path.join(args.image_dir, f) for f in os.listdir(args.image_dir) if os.path.isfile(os.path.join(args.image_dir, f))]
 image_files.sort()
-image_files = image_files[:1_800_000]
+image_files = image_files[:3]
 
-clean_dinohash = DINOHash(model="vits14_reg", pca_dims=96, prod_mode=False,)
-adversarial_dinohash = DINOHash(model="vits14_reg", pca_dims=96, prod_mode=False)
+clean_dinohash = DINOHash(model=args.model_backbone, pca_dims=args.n_bits, prod_mode=False)
+adversarial_dinohash = DINOHash(model=args.model_backbone, pca_dims=args.n_bits, prod_mode=False)
 
 dataset = ImageDataset(image_files)
 
@@ -136,14 +140,14 @@ while step_total < args.steps:
         # adv_images = images.cuda()
 
         adversarial_dinohash.dinov2.train()
-        adv_hashes, adv_loss = criterion_loss(adv_images, logits, loss="target bce")
+        adv_hashes, adv_loss = criterion_loss(adv_images, logits, adversarial_dinohash.hash, loss="target bce")
 
         adv_loss = adv_loss.mean()
         adv_loss.backward()
 
         clean_loss = 0
         if args.clean_weight > 0:
-            clean_hashes, clean_loss = criterion_loss(images, logits, loss="target bce")
+            clean_hashes, clean_loss = criterion_loss(images, logits, adversarial_dinohash.hash, loss="target bce")
             clean_loss =  args.clean_weight * clean_loss.mean()
             clean_loss.backward()
 

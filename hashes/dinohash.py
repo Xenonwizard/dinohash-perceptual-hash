@@ -40,15 +40,17 @@ class DINOHash:
     def __init__(self, pca_dims=96, model="vits14_reg", prod_mode=True):
         self.pca_dims = pca_dims
         self.model = model
+        self.prod_mode = prod_mode
+        
         self.dinov2 = torch.hub.load('facebookresearch/dinov2', f'dinov2_{self.model}').cuda()
         for param in self.dinov2.parameters():
             param.requires_grad = False
         self.dinov2.eval()
 
-        means = np.load(f'./hashes/dinov2_{self.model}_means_{pca_dims}.npy')
+        means = np.load(f'./hashes/dinov2_{self.model}_means.npy')
         self.means_torch = torch.from_numpy(means).cuda().float()
 
-        components = np.load(f'./hashes/dinov2_{self.model}_PCA_{pca_dims}.npy').T
+        components = np.load(f'./hashes/dinov2_{self.model}_PCA.npy').T
         self.components_torch = torch.from_numpy(components).cuda().float()
     
     def load_model(self, path):
@@ -73,11 +75,13 @@ class DINOHash:
             image_arrays = torch.stack([preprocess(Image.open(im)) for im in image_arrays])
 
         with wrapper():
-            image_arrays = self.normalize(image_arrays.cuda())
+            image_arrays = normalize(image_arrays.cuda())
             
             outs = self.dinov2(image_arrays) - self.means_torch
             
             outs = outs @ self.components_torch
+
+            outs = outs[:, :self.pca_dims]
 
             if l2_normalize:
                 outs = torch.nn.functional.normalize(outs, dim=1)

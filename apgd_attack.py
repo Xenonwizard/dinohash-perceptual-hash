@@ -275,7 +275,7 @@ class APGDAttack():
                 
             x_adv = x_adv_1 + 0.
 
-            hash, loss_indiv, grad = hash_loss_grad(x_adv, original_logits)
+            hash, loss_indiv, grad = hash_loss_grad(x_adv, original_logits, self.hasher)
             binarized_hash = (hash >= 0.5).float()
 
             if log:
