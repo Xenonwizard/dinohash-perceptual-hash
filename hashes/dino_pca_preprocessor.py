@@ -21,7 +21,7 @@ class ImageDataset(Dataset):
 
 
 dataset_folder = './diffusion_data'
-image_files = [f for f in os.listdir(dataset_folder)][:1_000_000]
+image_files = [f for f in os.listdir(dataset_folder)][:1_800_000]
 
 preprocess = transforms.Compose([
     transforms.Resize((224, 224)),
@@ -31,9 +31,9 @@ preprocess = transforms.Compose([
 
 BATCH_SIZE = 1024
 
-model = "dinov2_vitb14_reg"
+model = "dinov2_vits14_reg"
 dataset = ImageDataset(image_files, transform=preprocess)
-dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4, drop_last=False)
+dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=8, drop_last=False)
 
 dinov2 = torch.hub.load('facebookresearch/dinov2', model).cuda().eval()
 
@@ -48,7 +48,7 @@ outputs = torch.cat(outputs)
 means = outputs.mean(dim=0, keepdim=True)
 outputs -= means
 
-pca = PCA(n_components=512, whiten=True)
+pca = PCA(n_components=None, whiten=True)
 pca.fit(outputs)
 
 weights = pca.components_
