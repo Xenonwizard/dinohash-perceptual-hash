@@ -449,7 +449,7 @@ def batch_test_folders(ronnychieng_folder, test_folder):
 if __name__ == "__main__":
     # Define your folder paths
     ronnychieng_folder = "./elifiles/images/ronnychieng/"
-    test_folder = "./elifiles/images/test/"  # Update this path as needed
+    test_folder = "./elifiles/images/ronnychieng_test/"  # Update this path as needed
     
     # Check if folders exist
     if not os.path.exists(ronnychieng_folder):
