@@ -9,7 +9,6 @@ import math
 import glob
 from itertools import combinations
 
-
 def get_dinohash(image_path):
     """Get dinohash for an image using the command line version"""
     try:
@@ -31,208 +30,147 @@ def get_dinohash(image_path):
         print(f"Failed to run dinohash command: {e}")
         return None
 
-def face_specific_phash(face_image_path, hash_size=16):
-    """Generate face-specific perceptual hash using multiple methods"""
-    try:
-        # Load image
-        img = cv2.imread(face_image_path)
-        pil_img = Image.open(face_image_path)
-        
-        # Method 1: Standard pHash with larger hash size for faces
-        gray_pil = pil_img.convert('L').resize((128, 128))  # Larger for faces
-        phash = imagehash.phash(gray_pil, hash_size=hash_size)
-        
-        # Method 2: Average hash (more robust to lighting)
-        ahash = imagehash.average_hash(gray_pil, hash_size=hash_size)
-        
-        # Method 3: Difference hash (good for facial structure)
-        dhash = imagehash.dhash(gray_pil, hash_size=hash_size)
-        
-        # Method 4: Wavelet hash (captures textures)
-        whash = imagehash.whash(gray_pil, hash_size=hash_size)
-        
-        return {
-            'phash': str(phash),
-            'ahash': str(ahash), 
-            'dhash': str(dhash),
-            'whash': str(whash),
-            'dinohash': get_dinohash(face_image_path)
-        }
-        
-    except Exception as e:
-        print(f"Error generating face hashes: {e}")
-        return None
-
-def facial_region_hash(face_image_path):
-    """Generate hash based on facial regions"""
-    try:
-        img = cv2.imread(face_image_path)
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        height, width = gray.shape
-        
-        # Define facial regions
-        regions = {
-            'forehead': gray[0:int(height*0.3), int(width*0.2):int(width*0.8)],
-            'eyes': gray[int(height*0.2):int(height*0.5), :],
-            'nose': gray[int(height*0.3):int(height*0.7), int(width*0.3):int(width*0.7)],
-            'mouth': gray[int(height*0.6):int(height*0.9), int(width*0.2):int(width*0.8)],
-            'chin': gray[int(height*0.7):, int(width*0.3):int(width*0.7)]
-        }
-        
-        region_hashes = {}
-        for region_name, region in regions.items():
-            if region.size > 0:
-                # Resize region to standard size
-                resized = cv2.resize(region, (32, 32))
-                
-                # Simple DCT-based hash
-                dct = cv2.dct(np.float32(resized))
-                dct_low = dct[:8, :8]
-                median = np.median(dct_low)
-                hash_bits = (dct_low > median).flatten()
-                region_hashes[region_name] = ''.join(['1' if bit else '0' for bit in hash_bits])
-        
-        return region_hashes
-        
-    except Exception as e:
-        print(f"Error generating region hashes: {e}")
-        return None
-
-def compare_face_hashes(hashes1, hashes2):
-    """Compare face hashes using multiple methods"""
-    if not hashes1 or not hashes2:
-        return {}
-    
-    results = {}
-    
-    # Compare each hash type
-    for hash_type in ['phash', 'ahash', 'dhash', 'whash']:
-        if hash_type in hashes1 and hash_type in hashes2:
-            # Calculate Hamming distance for imagehash
-            try:
-                h1 = imagehash.hex_to_hash(hashes1[hash_type])
-                h2 = imagehash.hex_to_hash(hashes2[hash_type])
-                hamming_dist = h1 - h2
-                similarity = 1 - (hamming_dist / len(str(h1)))
-                results[hash_type] = {
-                    'similarity': max(0, similarity),
-                    'hamming_distance': hamming_dist
-                }
-            except:
-                results[hash_type] = {'similarity': 0, 'hamming_distance': float('inf')}
-    
-    # Compare dinohash
-    if 'dinohash' in hashes1 and 'dinohash' in hashes2 and hashes1['dinohash'] and hashes2['dinohash']:
-        try:
-            hash1_int = int(hashes1['dinohash'], 16)
-            hash2_int = int(hashes2['dinohash'], 16)
-            hamming_distance = bin(hash1_int ^ hash2_int).count('1')
-            total_bits = len(hashes1['dinohash']) * 4
-            similarity = 1 - (hamming_distance / total_bits)
-            results['dinohash'] = {
-                'similarity': similarity,
-                'hamming_distance': hamming_distance
-            }
-        except:
-            results['dinohash'] = {'similarity': 0, 'hamming_distance': float('inf')}
-    
-    return results
-
-def compare_region_hashes(regions1, regions2):
-    """Compare facial region hashes"""
-    if not regions1 or not regions2:
-        return {}
-    
-    region_similarities = {}
-    for region in regions1.keys():
-        if region in regions2:
-            h1, h2 = regions1[region], regions2[region]
-            diff = sum(c1 != c2 for c1, c2 in zip(h1, h2))
-            similarity = 1 - (diff / len(h1))
-            region_similarities[region] = similarity
-    
-    return region_similarities
-
-def align_face_with_landmarks(image, keypoints):
-    """Align face using eye landmarks"""
-    left_eye = keypoints['left_eye']
-    right_eye = keypoints['right_eye']
-    
+def align_face_pil(image, left_eye, right_eye):
+    """Align face using PIL instead of OpenCV"""
+    # Calculate angle
     dy = right_eye[1] - left_eye[1]
     dx = right_eye[0] - left_eye[0]
     angle = math.degrees(math.atan2(dy, dx))
     
-    center_x = (left_eye[0] + right_eye[0]) / 2
-    center_y = (left_eye[1] + right_eye[1]) / 2
-    center = (center_x, center_y)
+    # Rotate image
+    rotated = image.rotate(-angle, expand=False, center=((left_eye[0] + right_eye[0]) / 2, (left_eye[1] + right_eye[1]) / 2))
     
-    M = cv2.getRotationMatrix2D(center, angle, 1.0)
-    aligned = cv2.warpAffine(image, M, (image.shape[1], image.shape[0]), 
-                           flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
-    
-    return aligned
+    return rotated
 
-def extract_and_align_face(image_path, output_path):
-    """Extract and align face for hashing"""
+def enhance_face_image(pil_image):
+    """Enhance face image for better hashing"""
+    # Normalize size
+    normalized = pil_image.resize((200, 200), Image.Resampling.LANCZOS)
+    
+    # Enhance contrast
+    enhancer = ImageEnhance.Contrast(normalized)
+    enhanced = enhancer.enhance(1.2)
+    
+    # Enhance sharpness slightly
+    sharpness_enhancer = ImageEnhance.Sharpness(enhanced)
+    final = sharpness_enhancer.enhance(1.1)
+    
+    return final
+
+def extract_and_align_face_pil(image_path, output_path):
+    """Extract and align face using PIL and MTCNN"""
     try:
-        img = cv2.imread(image_path)
-        if img is None:
-            return False
+        # Load image with PIL
+        pil_img = Image.open(image_path)
+        img_array = np.array(pil_img)
         
-        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # Initialize MTCNN detector
         detector = MTCNN()
-        faces = detector.detect_faces(img_rgb)
+        
+        # Detect faces
+        faces = detector.detect_faces(img_array)
         
         if not faces:
-            print(f"No face detected in {image_path}")
-            return False
+            return False, "No face detected"
         
+        # Get best face
         best_face = max(faces, key=lambda x: x['confidence'])
-        print(f"Face confidence: {best_face['confidence']:.3f}")
+        
+        if best_face['confidence'] < 0.9:
+            return False, f"Low confidence: {best_face['confidence']:.3f}"
         
         if 'keypoints' not in best_face:
-            return False
+            return False, "No landmarks detected"
         
         keypoints = best_face['keypoints']
-        x, y, w, h = best_face['box']
+        left_eye = keypoints['left_eye']
+        right_eye = keypoints['right_eye']
         
-        # Extract with padding
+        # Extract face region with padding
+        x, y, w, h = best_face['box']
         padding = max(w, h) // 4
+        
         x = max(0, x - padding)
         y = max(0, y - padding)
-        w = min(img_rgb.shape[1] - x, w + 2*padding)
-        h = min(img_rgb.shape[0] - y, h + 2*padding)
+        w = min(pil_img.width - x, w + 2*padding)
+        h = min(pil_img.height - y, h + 2*padding)
         
-        face_region = img_rgb[y:y+h, x:x+w]
+        # Crop face
+        face_crop = pil_img.crop((x, y, x + w, y + h))
         
-        # Adjust keypoints
-        adjusted_keypoints = {}
-        for key, point in keypoints.items():
-            adjusted_keypoints[key] = (point[0] - x, point[1] - y)
+        # Adjust eye coordinates relative to crop
+        adjusted_left_eye = (left_eye[0] - x, left_eye[1] - y)
+        adjusted_right_eye = (right_eye[0] - x, right_eye[1] - y)
         
         # Align face
-        aligned_face = align_face_with_landmarks(face_region, adjusted_keypoints)
+        aligned_face = align_face_pil(face_crop, adjusted_left_eye, adjusted_right_eye)
         
-        # Normalize size
-        normalized = cv2.resize(aligned_face, (200, 200), interpolation=cv2.INTER_CUBIC)
+        # Enhance the face
+        enhanced_face = enhance_face_image(aligned_face)
         
         # Save
-        face_bgr = cv2.cvtColor(normalized, cv2.COLOR_RGB2BGR)
-        cv2.imwrite(output_path, face_bgr)
+        enhanced_face.save(output_path, 'JPEG', quality=95)
         
-        return True
+        return True, f"Success (confidence: {best_face['confidence']:.3f})"
         
     except Exception as e:
-        print(f"Error: {e}")
-        return False
+        return False, f"Error: {str(e)}"
 
-def comprehensive_face_comparison(img1_path, img2_path, save_faces=True):
-    """Comprehensive face comparison using multiple perceptual hashing methods"""
-    print(f"Comprehensive face comparison:")
-    print(f"  Image 1: {img1_path}")
-    print(f"  Image 2: {img2_path}")
-    print("-" * 60)
+def generate_face_hashes(face_image_path):
+    """Generate multiple face-specific hashes"""
+    try:
+        pil_img = Image.open(face_image_path)
+        
+        # Convert to grayscale for hashing
+        gray = pil_img.convert('L')
+        
+        # Generate different hash types with larger sizes for faces
+        hashes = {
+            'phash_8': str(imagehash.phash(gray, hash_size=8)),
+            'phash_16': str(imagehash.phash(gray, hash_size=16)),
+            'ahash_8': str(imagehash.average_hash(gray, hash_size=8)),
+            'ahash_16': str(imagehash.average_hash(gray, hash_size=16)),
+            'dhash_8': str(imagehash.dhash(gray, hash_size=8)),
+            'dhash_16': str(imagehash.dhash(gray, hash_size=16)),
+            'whash_8': str(imagehash.whash(gray, hash_size=8)),
+            'dinohash': get_dinohash(face_image_path)
+        }
+        
+        return hashes
+        
+    except Exception as e:
+        print(f"Error generating hashes: {e}")
+        return None
+
+def calculate_hash_similarity(hash1, hash2, hash_type):
+    """Calculate similarity between two hashes"""
+    if not hash1 or not hash2:
+        return 0
     
+    try:
+        if hash_type == 'dinohash':
+            # Handle hex dinohash
+            h1_int = int(hash1, 16)
+            h2_int = int(hash2, 16)
+            hamming_dist = bin(h1_int ^ h2_int).count('1')
+            total_bits = len(hash1) * 4
+            return 1 - (hamming_dist / total_bits)
+        else:
+            # Handle imagehash
+            h1 = imagehash.hex_to_hash(hash1)
+            h2 = imagehash.hex_to_hash(hash2)
+            hamming_dist = h1 - h2
+            total_bits = len(str(h1))
+            return max(0, 1 - (hamming_dist / total_bits))
+    except:
+        return 0
+
+def comprehensive_face_comparison_pil(img1_path, img2_path, save_faces=False, verbose=True):
+    """Compare faces using PIL-based processing"""
+    if verbose:
+        print(f"Comparing: {os.path.basename(img1_path)} vs {os.path.basename(img2_path)}")
+    
+    # Create temporary files
     with tempfile.NamedTemporaryFile(suffix='_face1.jpg', delete=False) as tmp1, \
          tempfile.NamedTemporaryFile(suffix='_face2.jpg', delete=False) as tmp2:
         
@@ -241,108 +179,106 @@ def comprehensive_face_comparison(img1_path, img2_path, save_faces=True):
     
     try:
         # Extract and align faces
-        print("Extracting faces...")
-        if not extract_and_align_face(img1_path, face1_path):
-            return False, {}
-        if not extract_and_align_face(img2_path, face2_path):
-            return False, {}
+        success1, msg1 = extract_and_align_face_pil(img1_path, face1_path)
+        if not success1:
+            if verbose:
+                print(f"  ❌ Image 1 failed: {msg1}")
+            return False, {'error': f"Image 1: {msg1}"}
         
+        success2, msg2 = extract_and_align_face_pil(img2_path, face2_path)
+        if not success2:
+            if verbose:
+                print(f"  ❌ Image 2 failed: {msg2}")
+            return False, {'error': f"Image 2: {msg2}"}
+        
+        # Save processed faces if requested
         if save_faces:
             import shutil
-            shutil.copy2(face1_path, f"face1_{os.path.basename(img1_path)}")
-            shutil.copy2(face2_path, f"face2_{os.path.basename(img2_path)}")
+            shutil.copy2(face1_path, f"processed_face1_{os.path.basename(img1_path)}")
+            shutil.copy2(face2_path, f"processed_face2_{os.path.basename(img2_path)}")
         
-        # Generate multiple types of hashes
-        print("Generating face-specific hashes...")
-        hashes1 = face_specific_phash(face1_path)
-        hashes2 = face_specific_phash(face2_path)
+        # Generate hashes
+        hashes1 = generate_face_hashes(face1_path)
+        hashes2 = generate_face_hashes(face2_path)
         
-        print("Generating region-based hashes...")
-        regions1 = facial_region_hash(face1_path)
-        regions2 = facial_region_hash(face2_path)
+        if not hashes1 or not hashes2:
+            if verbose:
+                print("  ❌ Failed to generate hashes")
+            return False, {'error': "Hash generation failed"}
         
         # Compare hashes
-        hash_results = compare_face_hashes(hashes1, hashes2)
-        region_results = compare_region_hashes(regions1, regions2)
+        similarities = []
+        detailed_results = {}
         
-        # Print detailed results
-        print("\n" + "="*50)
-        print("HASH COMPARISON RESULTS:")
-        print("="*50)
+        for hash_type in hashes1.keys():
+            similarity = calculate_hash_similarity(hashes1[hash_type], hashes2[hash_type], hash_type)
+            similarities.append(similarity)
+            detailed_results[hash_type] = similarity
         
-        overall_similarities = []
-        
-        for hash_type, result in hash_results.items():
-            similarity = result['similarity']
-            overall_similarities.append(similarity)
-            print(f"{hash_type.upper():>10}: {similarity:.4f} ({result['hamming_distance']} bits different)")
-        
-        print("\nREGION COMPARISON RESULTS:")
-        print("-"*30)
-        for region, similarity in region_results.items():
-            overall_similarities.append(similarity)
-            print(f"{region.capitalize():>10}: {similarity:.4f}")
-        
-        # Calculate overall similarity
-        avg_similarity = np.mean(overall_similarities) if overall_similarities else 0
-        weighted_similarity = (
-            hash_results.get('dinohash', {}).get('similarity', 0) * 0.3 +
-            hash_results.get('phash', {}).get('similarity', 0) * 0.3 +
-            hash_results.get('dhash', {}).get('similarity', 0) * 0.2 +
-            np.mean(list(region_results.values())) * 0.2 if region_results else 0
-        )
-        
-        print(f"\nOVERALL SIMILARITY:")
-        print(f"  Average: {avg_similarity:.4f}")
-        print(f"  Weighted: {weighted_similarity:.4f}")
-        
-        # Decision thresholds
-        thresholds = {
-            'very_high': 0.85,
-            'high': 0.75,
-            'medium': 0.65,
-            'low': 0.55
+        # Calculate overall similarity with weights
+        weights = {
+            'dinohash': 0.25,
+            'phash_16': 0.20,
+            'ahash_16': 0.15,
+            'dhash_16': 0.15,
+            'phash_8': 0.10,
+            'ahash_8': 0.05,
+            'dhash_8': 0.05,
+            'whash_8': 0.05
         }
         
-        decision = "DIFFERENT PEOPLE"
-        if weighted_similarity >= thresholds['very_high']:
+        weighted_similarity = sum(
+            detailed_results.get(hash_type, 0) * weight 
+            for hash_type, weight in weights.items()
+        )
+        
+        average_similarity = np.mean(similarities)
+        
+        # Decision logic
+        if weighted_similarity >= 0.85:
             decision = "SAME PERSON (Very High Confidence)"
-        elif weighted_similarity >= thresholds['high']:
+            is_same = True
+        elif weighted_similarity >= 0.75:
             decision = "SAME PERSON (High Confidence)"
-        elif weighted_similarity >= thresholds['medium']:
+            is_same = True
+        elif weighted_similarity >= 0.65:
             decision = "POSSIBLY SAME PERSON (Medium Confidence)"
-        elif weighted_similarity >= thresholds['low']:
-            decision = "POSSIBLY DIFFERENT PEOPLE (Low Confidence)"
+            is_same = True
+        elif weighted_similarity >= 0.55:
+            decision = "POSSIBLY DIFFERENT (Low Confidence)"
+            is_same = False
+        else:
+            decision = "DIFFERENT PEOPLE (High Confidence)"
+            is_same = False
         
-        print(f"\nFINAL DECISION: {decision}")
+        if verbose:
+            print(f"  Similarity: {weighted_similarity:.3f} - {decision}")
         
-        return weighted_similarity >= thresholds['medium'], {
+        return is_same, {
             'weighted_similarity': weighted_similarity,
-            'average_similarity': avg_similarity,
-            'hash_results': hash_results,
-            'region_results': region_results,
+            'average_similarity': average_similarity,
+            'detailed_results': detailed_results,
             'decision': decision
         }
         
     finally:
+        # Cleanup
         try:
             os.unlink(face1_path)
             os.unlink(face2_path)
         except:
             pass
 
-# Example usage
-if __name__ == "__main__":
-    # Test folders
-    ronnychieng_folder = "./elifiles/images/ronnychieng/"
-    test_folder = "./elifiles/images/ronnychieng_test/"  # Adjust this path as needed
+def batch_test_folders(ronnychieng_folder, test_folder):
+    """Test face comparison across two folders"""
     
     # Get all image files
-    image_extensions = ['*.jpg', '*.jpeg', '*.png', '*.bmp']
+    image_extensions = ['*.jpg', '*.jpeg', '*.png', '*.bmp', '*.JPG', '*.JPEG', '*.PNG', '*.BMP']
     
     ronny_images = []
     test_images = []
     
+    print("Scanning for images...")
     for ext in image_extensions:
         ronny_images.extend(glob.glob(os.path.join(ronnychieng_folder, ext)))
         test_images.extend(glob.glob(os.path.join(test_folder, ext)))
@@ -350,29 +286,122 @@ if __name__ == "__main__":
     print(f"Found {len(ronny_images)} images in ronnychieng folder")
     print(f"Found {len(test_images)} images in test folder")
     
-    # Test within ronnychieng folder (should be same person)
-    print("\n" + "="*60)
-    print("TESTING RONNY CHIENG IMAGES (Should be SAME PERSON)")
-    print("="*60)
+    if len(ronny_images) == 0:
+        print(f"❌ No images found in {ronnychieng_folder}")
+        return
     
-    for i, (img1, img2) in enumerate(combinations(ronny_images, 2)):
-        print(f"\n--- Test {i+1}: Ronny vs Ronny ---")
-        is_same, results = comprehensive_face_comparison_pil(img1, img2, save_faces=False)
-        similarity = results.get('weighted_similarity', 0) if results else 0
-        print(f"Result: {'✅ SAME' if is_same else '❌ DIFFERENT'} (Score: {similarity:.3f})")
+    if len(test_images) == 0:
+        print(f"❌ No images found in {test_folder}")
+        return
+    
+    # Test within ronnychieng folder (should be same person)
+    print("\n" + "="*70)
+    print("TESTING RONNY CHIENG IMAGES AGAINST EACH OTHER")
+    print("(Should detect as SAME PERSON)")
+    print("="*70)
+    
+    ronny_pairs = list(combinations(ronny_images, 2))
+    same_person_correct = 0
+    same_person_total = len(ronny_pairs)
+    
+    for i, (img1, img2) in enumerate(ronny_pairs):
+        print(f"\n--- Ronny Test {i+1}/{same_person_total} ---")
+        is_same, results = comprehensive_face_comparison_pil(img1, img2, save_faces=False, verbose=True)
+        
+        if results and 'error' not in results:
+            similarity = results.get('weighted_similarity', 0)
+            if is_same:
+                same_person_correct += 1
+                print(f"  ✅ CORRECT: Detected as same person (Score: {similarity:.3f})")
+            else:
+                print(f"  ❌ INCORRECT: Detected as different people (Score: {similarity:.3f})")
+        else:
+            print(f"  ⚠️  FAILED: {results.get('error', 'Unknown error')}")
+            same_person_total -= 1  # Don't count failed comparisons
     
     # Test ronnychieng vs test folder (should be different people)
-    print("\n" + "="*60)
-    print("TESTING RONNY VS TEST IMAGES (Should be DIFFERENT PEOPLE)")
-    print("="*60)
+    print("\n" + "="*70)
+    print("TESTING RONNY CHIENG VS TEST IMAGES")
+    print("(Should detect as DIFFERENT PEOPLE)")
+    print("="*70)
     
-    test_count = 0
-    for ronny_img in ronny_images[:3]:  # Test first 3 ronny images
-        for test_img in test_images[:3]:  # Against first 3 test images
-            test_count += 1
-            print(f"\n--- Test {test_count}: Ronny vs Test ---")
-            print(f"Ronny: {os.path.basename(ronny_img)}")
-            print(f"Test: {os.path.basename(test_img)}")
-            is_same, results = comprehensive_face_comparison_pil(ronny_img, test_img, save_faces=False)
-            similarity = results.get('weighted_similarity', 0) if results else 0
-            print(f"Result: {'✅ SAME' if is_same else '❌ DIFFERENT'} (Score: {similarity:.3f})")
+    different_person_correct = 0
+    different_person_total = 0
+    
+    # Test first few images from each folder to avoid too many comparisons
+    max_ronny = min(3, len(ronny_images))
+    max_test = min(3, len(test_images))
+    
+    for i, ronny_img in enumerate(ronny_images[:max_ronny]):
+        for j, test_img in enumerate(test_images[:max_test]):
+            different_person_total += 1
+            print(f"\n--- Different People Test {different_person_total} ---")
+            print(f"  Ronny: {os.path.basename(ronny_img)}")
+            print(f"  Test:  {os.path.basename(test_img)}")
+            
+            is_same, results = comprehensive_face_comparison_pil(ronny_img, test_img, save_faces=False, verbose=False)
+            
+            if results and 'error' not in results:
+                similarity = results.get('weighted_similarity', 0)
+                if not is_same:
+                    different_person_correct += 1
+                    print(f"  ✅ CORRECT: Detected as different people (Score: {similarity:.3f})")
+                else:
+                    print(f"  ❌ INCORRECT: Detected as same person (Score: {similarity:.3f})")
+                print(f"     {results.get('decision', '')}")
+            else:
+                print(f"  ⚠️  FAILED: {results.get('error', 'Unknown error')}")
+                different_person_total -= 1  # Don't count failed comparisons
+    
+    # Print summary
+    print("\n" + "="*70)
+    print("SUMMARY RESULTS")
+    print("="*70)
+    
+    if same_person_total > 0:
+        same_accuracy = (same_person_correct / same_person_total) * 100
+        print(f"Same Person Detection:     {same_person_correct}/{same_person_total} ({same_accuracy:.1f}% correct)")
+    
+    if different_person_total > 0:
+        different_accuracy = (different_person_correct / different_person_total) * 100
+        print(f"Different People Detection: {different_person_correct}/{different_person_total} ({different_accuracy:.1f}% correct)")
+    
+    if same_person_total > 0 and different_person_total > 0:
+        overall_correct = same_person_correct + different_person_correct
+        overall_total = same_person_total + different_person_total
+        overall_accuracy = (overall_correct / overall_total) * 100
+        print(f"Overall Accuracy:          {overall_correct}/{overall_total} ({overall_accuracy:.1f}%)")
+    
+    print("\nRecommendations:")
+    if same_person_total > 0 and (same_person_correct / same_person_total) < 0.7:
+        print("- Same person detection is low. Consider lowering similarity threshold.")
+    if different_person_total > 0 and (different_person_correct / different_person_total) < 0.7:
+        print("- Different people detection is low. Consider raising similarity threshold.")
+    if same_person_total > 0 and different_person_total > 0:
+        total_acc = (same_person_correct + different_person_correct) / (same_person_total + different_person_total)
+        if total_acc > 0.8:
+            print("- ✅ Good performance! Face hashing is working well for your dataset.")
+        elif total_acc > 0.6:
+            print("- ⚠️  Moderate performance. Consider using dedicated face recognition instead.")
+        else:
+            print("- ❌ Poor performance. Strongly recommend switching to proper face recognition.")
+
+# Example usage
+if __name__ == "__main__":
+    # Define your folder paths
+    ronnychieng_folder = "./elifiles/images/ronnychieng/"
+    test_folder = "./elifiles/images/ronnychieng_test/"  # Update this path as needed
+    
+    # Check if folders exist
+    if not os.path.exists(ronnychieng_folder):
+        print(f"❌ Ronny Chieng folder not found: {ronnychieng_folder}")
+        print("Please update the ronnychieng_folder path")
+        exit(1)
+    
+    if not os.path.exists(test_folder):
+        print(f"❌ Test folder not found: {test_folder}")
+        print("Please update the test_folder path or create the folder")
+        exit(1)
+    
+    # Run the batch test
+    batch_test_folders(ronnychieng_folder, test_folder)
