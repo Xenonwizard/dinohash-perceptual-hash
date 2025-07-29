@@ -333,7 +333,7 @@ def comprehensive_face_comparison(img1_path, img2_path, save_faces=True):
 if __name__ == "__main__":
     # Test folders
     ronnychieng_folder = "./elifiles/images/ronnychieng/"
-    test_folder = "./elifiles/images/test/"  # Adjust this path as needed
+    test_folder = "./elifiles/images/ronnychieng_test/"  # Adjust this path as needed
     
     # Get all image files
     image_extensions = ['*.jpg', '*.jpeg', '*.png', '*.bmp']
