@@ -119,27 +119,57 @@ def extract_and_align_face_pil(image_path, output_path):
 def generate_face_hashes(face_image_path):
     """Generate multiple face-specific hashes"""
     try:
+        print(f"    Loading image: {face_image_path}")
         pil_img = Image.open(face_image_path)
         
         # Convert to grayscale for hashing
+        print("    Converting to grayscale...")
         gray = pil_img.convert('L')
         
-        # Generate different hash types with larger sizes for faces
-        hashes = {
-            'phash_8': str(imagehash.phash(gray, hash_size=8)),
-            'phash_16': str(imagehash.phash(gray, hash_size=16)),
-            'ahash_8': str(imagehash.average_hash(gray, hash_size=8)),
-            'ahash_16': str(imagehash.average_hash(gray, hash_size=16)),
-            'dhash_8': str(imagehash.dhash(gray, hash_size=8)),
-            'dhash_16': str(imagehash.dhash(gray, hash_size=16)),
-            'whash_8': str(imagehash.whash(gray, hash_size=8)),
-            'dinohash': get_dinohash(face_image_path)
-        }
+        hashes = {}
         
-        return hashes
+        # Try each hash type individually to isolate errors
+        try:
+            print("    Generating phash_8...")
+            hashes['phash_8'] = str(imagehash.phash(gray, hash_size=8))
+        except Exception as e:
+            print(f"    ❌ phash_8 failed: {e}")
+            hashes['phash_8'] = None
+            
+        try:
+            print("    Generating ahash_8...")
+            hashes['ahash_8'] = str(imagehash.average_hash(gray, hash_size=8))
+        except Exception as e:
+            print(f"    ❌ ahash_8 failed: {e}")
+            hashes['ahash_8'] = None
+            
+        try:
+            print("    Generating dhash_8...")
+            hashes['dhash_8'] = str(imagehash.dhash(gray, hash_size=8))
+        except Exception as e:
+            print(f"    ❌ dhash_8 failed: {e}")
+            hashes['dhash_8'] = None
+            
+        try:
+            print("    Generating dinohash...")
+            hashes['dinohash'] = get_dinohash(face_image_path)
+        except Exception as e:
+            print(f"    ❌ dinohash failed: {e}")
+            hashes['dinohash'] = None
+        
+        print(f"    Generated {sum(1 for v in hashes.values() if v is not None)} out of {len(hashes)} hashes")
+        
+        # Return hashes if at least one succeeded
+        if any(v is not None for v in hashes.values()):
+            return hashes
+        else:
+            print("    ❌ All hash generation methods failed")
+            return None
         
     except Exception as e:
-        print(f"Error generating hashes: {e}")
+        print(f"Error in generate_face_hashes: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 def calculate_hash_similarity(hash1, hash2, hash_type):
@@ -206,45 +236,74 @@ def comprehensive_face_comparison_pil(img1_path, img2_path, save_faces=False, ve
                 print("  ❌ Failed to generate hashes")
             return False, {'error': "Hash generation failed"}
         
+        # DEBUG: Print actual hash values
+        if verbose:
+            print("  🔍 DEBUG - Hash values:")
+            for hash_type in hashes1.keys():
+                h1 = hashes1.get(hash_type)
+                h2 = hashes2.get(hash_type)
+                print(f"    {hash_type}: {h1} vs {h2}")
+        
         # Compare hashes
         similarities = []
         detailed_results = {}
         
+        if verbose:
+            print("  🔍 DEBUG - Individual similarities:")
+        
         for hash_type in hashes1.keys():
             similarity = calculate_hash_similarity(hashes1[hash_type], hashes2[hash_type], hash_type)
-            similarities.append(similarity)
-            detailed_results[hash_type] = similarity
+            if hashes1[hash_type] is not None and hashes2[hash_type] is not None:
+                similarities.append(similarity)
+                detailed_results[hash_type] = similarity
+                if verbose:
+                    print(f"    {hash_type}: {similarity:.4f}")
+            else:
+                detailed_results[hash_type] = 0.0
+                if verbose:
+                    print(f"    {hash_type}: FAILED (None hash)")
         
-        # Calculate overall similarity with weights
+        # Calculate overall similarity with weights - only use successful hashes
         weights = {
             'dinohash': 0.25,
-            'phash_16': 0.20,
-            'ahash_16': 0.15,
-            'dhash_16': 0.15,
-            'phash_8': 0.10,
-            'ahash_8': 0.05,
-            'dhash_8': 0.05,
-            'whash_8': 0.05
+            'phash_8': 0.20,
+            'ahash_8': 0.20,
+            'dhash_8': 0.20,
+            'whash_8': 0.15
         }
         
-        weighted_similarity = sum(
-            detailed_results.get(hash_type, 0) * weight 
-            for hash_type, weight in weights.items()
-        )
+        # Calculate weighted similarity only from successful hashes
+        total_weight = 0
+        weighted_sum = 0
         
-        average_similarity = np.mean(similarities)
+        for hash_type, weight in weights.items():
+            if hash_type in detailed_results and detailed_results[hash_type] > 0:
+                weighted_sum += detailed_results[hash_type] * weight
+                total_weight += weight
         
-        # Decision logic
-        if weighted_similarity >= 0.85:
-            decision = "SAME PERSON (Very High Confidence)"
-            is_same = True
-        elif weighted_similarity >= 0.75:
+        # Normalize by actual total weight used
+        weighted_similarity = weighted_sum / total_weight if total_weight > 0 else 0
+        
+        average_similarity = np.mean(similarities) if similarities else 0
+        
+        if verbose:
+            print(f"  🔍 DEBUG - Calculations:")
+            print(f"    Weighted sum: {weighted_sum:.4f}")
+            print(f"    Total weight: {total_weight:.4f}")
+            print(f"    Weighted similarity: {weighted_similarity:.4f}")
+            print(f"    Average similarity: {average_similarity:.4f}")
+        
+        # More generous decision logic for face comparison
+        if weighted_similarity >= 0.75:
             decision = "SAME PERSON (High Confidence)"
             is_same = True
-        elif weighted_similarity >= 0.65:
-            decision = "POSSIBLY SAME PERSON (Medium Confidence)"
+        elif weighted_similarity >= 0.60:
+            decision = "SAME PERSON (Medium Confidence)"
             is_same = True
-        elif weighted_similarity >= 0.55:
+        elif weighted_similarity >= 0.45:
+            decision = "POSSIBLY SAME PERSON (Low Confidence)"
+            is_same = True
+        elif weighted_similarity >= 0.30:
             decision = "POSSIBLY DIFFERENT (Low Confidence)"
             is_same = False
         else:
@@ -252,7 +311,7 @@ def comprehensive_face_comparison_pil(img1_path, img2_path, save_faces=False, ve
             is_same = False
         
         if verbose:
-            print(f"  Similarity: {weighted_similarity:.3f} - {decision}")
+            print(f"  Final: {weighted_similarity:.3f} - {decision}")
         
         return is_same, {
             'weighted_similarity': weighted_similarity,
@@ -390,7 +449,7 @@ def batch_test_folders(ronnychieng_folder, test_folder):
 if __name__ == "__main__":
     # Define your folder paths
     ronnychieng_folder = "./elifiles/images/ronnychieng/"
-    test_folder = "./elifiles/images/ronnychieng_test/"  # Update this path as needed
+    test_folder = "./elifiles/images/test/"  # Update this path as needed
     
     # Check if folders exist
     if not os.path.exists(ronnychieng_folder):
