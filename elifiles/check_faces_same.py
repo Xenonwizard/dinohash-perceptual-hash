@@ -54,7 +54,7 @@ def compare_images(img1_path, img2_path):
 # Example usage
 if __name__ == "__main__":
     # Single image hash
-    image_path = "./original.jpg"
+    image_path = "./images/original.jpg"
     hash_value = get_dinohash(image_path)
     if hash_value:
         print(f"Hash for {image_path}: {hash_value}")
