@@ -192,8 +192,8 @@ def compare_faces(img1_path, img2_path, save_faces=False):
 # Example usage
 if __name__ == "__main__":
     # Compare faces in two images
-    img1 = "./images/ronnychieng/download (8).jpeg"
-    img2 = "./images/ronnychieng/download (10).jpeg"
+    img1 = "./elifiles/images/ronnychieng/download (8).jpeg"
+    img2 = "./elifiles/images/ronnychieng/download (10).jpeg"
     
     if os.path.exists(img1) and os.path.exists(img2):
         # Set save_faces=True to save the extracted faces for inspection
