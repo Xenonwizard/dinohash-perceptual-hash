@@ -251,11 +251,24 @@ def compare_faces_with_threshold(img1_path, img2_path, threshold=0.80, save_face
             
             # Calculate Hamming distance and similarity
             try:
+                # hash1_int = int(hash1, 16)
+                # hash2_int = int(hash2, 16)
+                # hamming_distance = bin(hash1_int ^ hash2_int).count('1')
+                
+                # # Calculate similarity
+                # total_bits = len(hash1) * 4  # 4 bits per hex digit
+                # similarity = 1 - (hamming_distance / total_bits)
+                # Extract just the hex parts
+                hash1 = extract_hex_hash(hash1)
+                hash2 = extract_hex_hash(hash2)
+                
+                print(f"\nFace 1 hash: {hash1}")
+                print(f"Face 2 hash: {hash2}")
+                
+                # Now the original calculation should work
                 hash1_int = int(hash1, 16)
                 hash2_int = int(hash2, 16)
                 hamming_distance = bin(hash1_int ^ hash2_int).count('1')
-                
-                # Calculate similarity
                 total_bits = len(hash1) * 4  # 4 bits per hex digit
                 similarity = 1 - (hamming_distance / total_bits)
                 
@@ -288,6 +301,12 @@ def compare_faces_with_threshold(img1_path, img2_path, threshold=0.80, save_face
             os.unlink(face2_path)
         except:
             pass
+    # Extract just the hex part from the dinohash output
+def extract_hex_hash(hash_string):
+    """Extract hex hash from dinohash output string"""
+    if "0x" in hash_string:
+        return hash_string.split("0x")[1].strip()
+    return hash_string.strip()
 
 # Example usage
 if __name__ == "__main__":
