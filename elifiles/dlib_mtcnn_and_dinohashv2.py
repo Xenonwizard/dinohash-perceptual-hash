@@ -297,8 +297,8 @@ def compare_faces_with_threshold(img1_path, img2_path, threshold=0.80, save_face
                 is_same = similarity >= threshold
 
                 # With this:
-                max_bit_difference = 21
-                is_same = hamming_distance <= max_bit_difference
+                # max_bit_difference = 21
+                # is_same = hamming_distance <= max_bit_difference
 
                 # And update the print statements:
                 if is_same:
@@ -403,7 +403,7 @@ if __name__ == "__main__":
         total_comparisons += 1
         print(f"\n--- Comparison {total_comparisons} ---")
         
-        is_same, similarity = compare_faces_with_threshold(img1, img2, threshold=0.672)
+        is_same, similarity = compare_faces_with_threshold(img1, img2, threshold=0.5)
         
         if is_same:
             same_person_count += 1
