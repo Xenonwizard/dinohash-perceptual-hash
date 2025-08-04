@@ -286,25 +286,25 @@ def compare_faces_with_threshold(img1_path, img2_path, threshold=0.80, save_face
                 print(f"  Total bits: {total_bits}")
                 print(f"  Similarity score: {similarity:.4f}")
                 
-                # # Check against threshold
-                # is_same = similarity >= threshold
-                
-                # if is_same:
-                #     print(f"✅ SAME PERSON: Similarity {similarity:.3f} >= threshold {threshold}")
-                # else:
-                #     print(f"❌ DIFFERENT PEOPLE: Similarity {similarity:.3f} < threshold {threshold}")
-                # Replace this section:
+                # Check against threshold
                 is_same = similarity >= threshold
+                
+                if is_same:
+                    print(f"✅ SAME PERSON: Similarity {similarity:.3f} >= threshold {threshold}")
+                else:
+                    print(f"❌ DIFFERENT PEOPLE: Similarity {similarity:.3f} < threshold {threshold}")
+                # Replace this section:
+                # is_same = similarity >= threshold
 
                 # With this:
                 # max_bit_difference = 21
                 # is_same = hamming_distance <= max_bit_difference
 
                 # And update the print statements:
-                if is_same:
-                    print(f"✅ SAME PERSON: {hamming_distance} bits different <= {max_bit_difference} max")
-                else:
-                    print(f"❌ DIFFERENT PEOPLE: {hamming_distance} bits different > {max_bit_difference} max")
+                # if is_same:
+                #     print(f"✅ SAME PERSON: {hamming_distance} bits different <= {max_bit_difference} max")
+                # else:
+                #     print(f"❌ DIFFERENT PEOPLE: {hamming_distance} bits different > {max_bit_difference} max")
                 
                 return is_same, similarity
                 
