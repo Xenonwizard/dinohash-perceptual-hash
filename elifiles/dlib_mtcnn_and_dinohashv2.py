@@ -394,6 +394,8 @@ if __name__ == "__main__":
     
     print(f"Found {len(image_files)} images")
     
+    # ADD THIS LINE:
+    all_results = []
     same_person_count = 0
     different_person_count = 0
     total_comparisons = 0
@@ -405,6 +407,19 @@ if __name__ == "__main__":
         
         is_same, similarity = compare_faces_with_threshold(img1, img2, threshold=0.5)
         
+        # ADD THIS SECTION TO COLLECT DATA:
+        result = {
+            'timestamp': datetime.now().isoformat(),
+            'image1': os.path.basename(img1),
+            'image2': os.path.basename(img2),
+            'hamming_distance': -1,  # You'll need to get this from the function
+            'similarity': similarity,
+            'is_same_person': is_same,
+            'bits_different': -1,
+            'total_bits': -1
+        }
+        all_results.append(result)
+        
         if is_same:
             same_person_count += 1
         else:
@@ -412,11 +427,3 @@ if __name__ == "__main__":
 
     # Save all results to CSV
     save_comparison_results(all_results, "ronnychieng_face_comparisons.csv")
-    
-    
-    print(f"\n{'='*60}")
-    print(f"RESULTS:")
-    print(f"Total comparisons: {total_comparisons}")
-    print(f"Same person: {same_person_count}")
-    print(f"Different person: {different_person_count}")
-    print(f"Same person rate: {same_person_count/total_comparisons*100:.1f}%")
