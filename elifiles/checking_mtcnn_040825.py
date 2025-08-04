@@ -296,7 +296,7 @@ def demo_mtcnn_extraction():
     
     # Example 1: Single image analysis
     # Replace with actual image path from your dataset
-    image_path = "./images/sample_face.jpg"  # Update this path
+    image_path = "./images/ronnychieng/download (8).jpeg"  # Update this path
     
     if os.path.exists(image_path):
         print("Analyzing single image...")
@@ -313,9 +313,9 @@ def demo_mtcnn_extraction():
     
     # Example 2: Compare multiple images of same person
     same_person_images = [
-        "./images/person1/photo1.jpg",  # Update these paths
-        "./images/person1/photo2.jpg",
-        "./images/person1/photo3.jpg"
+        "./images/ronnychieng/download (10).jpeg",  # Update these paths
+        "./images/ronnychieng/download (12).jpeg",
+        "./images/ronnychieng/download (14).jpeg"
     ]
     
     # Filter existing images
