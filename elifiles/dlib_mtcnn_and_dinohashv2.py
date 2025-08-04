@@ -134,7 +134,7 @@ def extract_and_align_face(image_path, output_path):
         # Get the face with highest confidence
         best_face = max(faces, key=lambda x: x['confidence'])
         confidence = best_face['confidence']
-        print(f"Face detected with confidence: {confidence:.3f}")
+        # print(f"Face detected with confidence: {confidence:.3f}")
         
         # Check if we have good landmarks
         if 'keypoints' not in best_face:
@@ -166,8 +166,8 @@ def extract_and_align_face(image_path, output_path):
         for key, point in keypoints.items():
             adjusted_keypoints[key] = (point[0] - x, point[1] - y)
         
-        print(f"Original landmarks - Left eye: {keypoints['left_eye']}, Right eye: {keypoints['right_eye']}")
-        print(f"Adjusted landmarks - Left eye: {adjusted_keypoints['left_eye']}, Right eye: {adjusted_keypoints['right_eye']}")
+        # print(f"Original landmarks - Left eye: {keypoints['left_eye']}, Right eye: {keypoints['right_eye']}")
+        # print(f"Adjusted landmarks - Left eye: {adjusted_keypoints['left_eye']}, Right eye: {adjusted_keypoints['right_eye']}")
         
         # Align the face using eye landmarks
         aligned_face, rotation_angle = align_face_with_landmarks(face_region, adjusted_keypoints)
@@ -218,10 +218,10 @@ def compare_faces_with_threshold(img1_path, img2_path, threshold=0.80, save_face
     
     try:
         # Extract and align faces
-        print("Extracting and aligning face from image 1...")
+        # print("Extracting and aligning face from image 1...")
         face1_extracted = extract_and_align_face(img1_path, face1_path)
         
-        print("\nExtracting and aligning face from image 2...")
+        # print("\nExtracting and aligning face from image 2...")
         face2_extracted = extract_and_align_face(img2_path, face2_path)
         
         if not face1_extracted or not face2_extracted:
