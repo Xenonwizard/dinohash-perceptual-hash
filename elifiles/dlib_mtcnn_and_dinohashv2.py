@@ -323,7 +323,8 @@ if __name__ == "__main__":
         
         for thresh in thresholds:
             print(f"\n--- Testing threshold: {thresh} ---")
-            is_same, similarity = compare_faces_with_threshold(img1, img2, threshold=thresh, save_faces=(thresh==0.80))
+            # is_same, similarity = compare_faces_with_threshold(img1, img2, threshold=thresh, save_faces=(thresh==0.80))
+            is_same, similarity = compare_faces_with_threshold(img1, img2, threshold=thresh, save_faces=(thresh==thresholds[0]))
             print(f"Result: {'SAME PERSON' if is_same else 'DIFFERENT PEOPLE'}")
             
         print("\n" + "="*60)
