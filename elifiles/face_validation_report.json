@@ -1,0 +1,140 @@
+{
+  "dataset_info": {
+    "total_people": 18,
+    "total_comparisons": 104,
+    "same_person_comparisons": 54,
+    "different_person_comparisons": 50
+  },
+  "similarity_statistics": {
+    "same_person": {
+      "mean": 0.6684027777777779,
+      "std": 0.0857985572455127,
+      "min": 0.5,
+      "max": 0.8854166666666666,
+      "median": 0.6770833333333333
+    },
+    "different_person": {
+      "mean": 0.5972916666666667,
+      "std": 0.07970240873608107,
+      "min": 0.4375,
+      "max": 0.7916666666666666,
+      "median": 0.5885416666666666
+    }
+  },
+  "optimal_threshold": {
+    "threshold": 0.65,
+    "same_person_accuracy": 0.5925925925925926,
+    "different_person_accuracy": 0.78,
+    "overall_accuracy": 0.6826923076923077,
+    "false_positives": 11,
+    "false_negatives": 22,
+    "same_person_count": 54,
+    "different_person_count": 50
+  },
+  "threshold_analysis": [
+    {
+      "threshold": 0.95,
+      "same_person_accuracy": 0.0,
+      "different_person_accuracy": 1.0,
+      "overall_accuracy": 0.4807692307692308,
+      "false_positives": 0,
+      "false_negatives": 54,
+      "same_person_count": 54,
+      "different_person_count": 50
+    },
+    {
+      "threshold": 0.9,
+      "same_person_accuracy": 0.0,
+      "different_person_accuracy": 1.0,
+      "overall_accuracy": 0.4807692307692308,
+      "false_positives": 0,
+      "false_negatives": 54,
+      "same_person_count": 54,
+      "different_person_count": 50
+    },
+    {
+      "threshold": 0.85,
+      "same_person_accuracy": 0.037037037037037035,
+      "different_person_accuracy": 1.0,
+      "overall_accuracy": 0.5,
+      "false_positives": 0,
+      "false_negatives": 52,
+      "same_person_count": 54,
+      "different_person_count": 50
+    },
+    {
+      "threshold": 0.8,
+      "same_person_accuracy": 0.07407407407407407,
+      "different_person_accuracy": 1.0,
+      "overall_accuracy": 0.5192307692307693,
+      "false_positives": 0,
+      "false_negatives": 50,
+      "same_person_count": 54,
+      "different_person_count": 50
+    },
+    {
+      "threshold": 0.75,
+      "same_person_accuracy": 0.2037037037037037,
+      "different_person_accuracy": 0.96,
+      "overall_accuracy": 0.5673076923076923,
+      "false_positives": 2,
+      "false_negatives": 43,
+      "same_person_count": 54,
+      "different_person_count": 50
+    },
+    {
+      "threshold": 0.7,
+      "same_person_accuracy": 0.3333333333333333,
+      "different_person_accuracy": 0.9,
+      "overall_accuracy": 0.6057692307692307,
+      "false_positives": 5,
+      "false_negatives": 36,
+      "same_person_count": 54,
+      "different_person_count": 50
+    },
+    {
+      "threshold": 0.65,
+      "same_person_accuracy": 0.5925925925925926,
+      "different_person_accuracy": 0.78,
+      "overall_accuracy": 0.6826923076923077,
+      "false_positives": 11,
+      "false_negatives": 22,
+      "same_person_count": 54,
+      "different_person_count": 50
+    },
+    {
+      "threshold": 0.6,
+      "same_person_accuracy": 0.7407407407407407,
+      "different_person_accuracy": 0.56,
+      "overall_accuracy": 0.6538461538461539,
+      "false_positives": 22,
+      "false_negatives": 14,
+      "same_person_count": 54,
+      "different_person_count": 50
+    },
+    {
+      "threshold": 0.55,
+      "same_person_accuracy": 0.9444444444444444,
+      "different_person_accuracy": 0.24,
+      "overall_accuracy": 0.6057692307692307,
+      "false_positives": 38,
+      "false_negatives": 3,
+      "same_person_count": 54,
+      "different_person_count": 50
+    },
+    {
+      "threshold": 0.5,
+      "same_person_accuracy": 1.0,
+      "different_person_accuracy": 0.1,
+      "overall_accuracy": 0.5673076923076923,
+      "false_positives": 45,
+      "false_negatives": 0,
+      "same_person_count": 54,
+      "different_person_count": 50
+    }
+  ],
+  "recommendations": [
+    "WARNING: Poor separation between same-person and different-person similarities. Consider improving face alignment or using a different hashing method.",
+    "Recommended threshold: 0.65 (Overall accuracy: 0.683)"
+  ]
+}
