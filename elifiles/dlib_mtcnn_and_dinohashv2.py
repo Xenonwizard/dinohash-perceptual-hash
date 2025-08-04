@@ -292,8 +292,8 @@ def compare_faces_with_threshold(img1_path, img2_path, threshold=0.80, save_face
 # Example usage
 if __name__ == "__main__":
     # Compare faces in two images
-    img1 = "./elifiles/images/ronnychieng/download (8).jpeg"
-    img2 = "./elifiles/images/ronnychieng/download (10).jpeg"
+    img1 = "./images/ronnychieng/download (8).jpeg"
+    img2 = "./images/ronnychieng/download (10).jpeg"
     
     if os.path.exists(img1) and os.path.exists(img2):
         # Try different thresholds to find what works best
