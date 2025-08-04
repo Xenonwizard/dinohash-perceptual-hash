@@ -14,9 +14,17 @@ def get_dinohash(image_path):
         str: The hash string, or None if failed
     """
     try:
-        # Run the command line version
+        # Convert to absolute path to avoid path issues
+        abs_image_path = os.path.abspath(image_path)
+        
+        # Debug: print the paths being used
+        print(f"    Original path: {image_path}")
+        print(f"    Absolute path: {abs_image_path}")
+        print(f"    File exists: {os.path.exists(abs_image_path)}")
+        
+        # Run the command line version with absolute path
         result = subprocess.run([
-            'python3', 'hashes/dinohash.py', image_path
+            'python3', 'hashes/dinohash.py', abs_image_path
         ], 
         capture_output=True, 
         text=True, 
@@ -27,11 +35,11 @@ def get_dinohash(image_path):
             # Return the hash (strip whitespace)
             return result.stdout.strip()
         else:
-            print(f"Error: {result.stderr}")
+            print(f"    Error output: {result.stderr.strip()}")
             return None
             
     except Exception as e:
-        print(f"Failed to run dinohash command: {e}")
+        print(f"    Failed to run dinohash command: {e}")
         return None
 
 def hamming_distance(hash1, hash2):
