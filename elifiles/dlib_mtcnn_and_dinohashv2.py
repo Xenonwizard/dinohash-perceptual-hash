@@ -348,6 +348,31 @@ def extract_hex_hash(hash_string):
 #         print("One or both image files not found")
 #         print(f"Image 1 exists: {os.path.exists(img1)}")
 #         print(f"Image 2 exists: {os.path.exists(img2)}")
+
+import csv
+from datetime import datetime
+
+def save_comparison_results(results, filename="face_comparison_results.csv"):
+    """Save comparison results to CSV file (append mode)"""
+    
+    # Check if file exists to determine if we need headers
+    file_exists = os.path.exists(filename)
+    
+    with open(filename, 'a', newline='') as csvfile:  # 'a' for append mode
+        fieldnames = ['timestamp', 'image1', 'image2', 'hamming_distance', 'similarity', 
+                     'is_same_person', 'bits_different', 'total_bits']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        
+        # Only write header if file is new
+        if not file_exists:
+            writer.writeheader()
+        
+        for result in results:
+            writer.writerow(result)
+    
+    print(f"Results appended to: {filename}")
+    print(f"Total rows added: {len(results)}")
+
 if __name__ == "__main__":
     import glob
     from itertools import combinations
@@ -375,6 +400,10 @@ if __name__ == "__main__":
             same_person_count += 1
         else:
             different_person_count += 1
+
+    # Save all results to CSV
+    save_comparison_results(all_results, "ronnychieng_face_comparisons.csv")
+    
     
     print(f"\n{'='*60}")
     print(f"RESULTS:")
