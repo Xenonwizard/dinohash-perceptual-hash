@@ -369,7 +369,7 @@ if __name__ == "__main__":
         total_comparisons += 1
         print(f"\n--- Comparison {total_comparisons} ---")
         
-        is_same, similarity = compare_faces_with_threshold(img1, img2, threshold=0.80)
+        is_same, similarity = compare_faces_with_threshold(img1, img2, threshold=0.672)
         
         if is_same:
             same_person_count += 1
