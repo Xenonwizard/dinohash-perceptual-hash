@@ -52,8 +52,12 @@ def hamming_distance(hash1, hash2):
 
 def get_image_files(folder_path):
     """
-    Get all image files from a folder
+    Get all image files from a folder that actually exist
     """
+    if not os.path.exists(folder_path):
+        print(f"Folder does not exist: {folder_path}")
+        return []
+    
     extensions = ['*.jpg', '*.jpeg', '*.png', '*.bmp', '*.tiff', '*.gif']
     
     image_files = []
@@ -64,13 +68,40 @@ def get_image_files(folder_path):
         pattern_upper = os.path.join(folder_path, ext.upper())
         image_files.extend(glob.glob(pattern_upper, recursive=False))
     
-    return sorted(list(set(image_files)))
+    # Filter out files that don't actually exist (just in case)
+    existing_files = [f for f in image_files if os.path.isfile(f)]
+    
+    print(f"Found {len(existing_files)} existing image files out of {len(image_files)} detected")
+    return sorted(list(set(existing_files)))
+
+def debug_folder_contents(folder_path):
+    """
+    Debug function to see what's actually in the folder
+    """
+    if not os.path.exists(folder_path):
+        print(f"Folder does not exist: {folder_path}")
+        return
+    
+    print(f"\nDEBUG: Contents of {folder_path}:")
+    all_files = os.listdir(folder_path)
+    print(f"Total files/folders: {len(all_files)}")
+    
+    for file in sorted(all_files):
+        full_path = os.path.join(folder_path, file)
+        if os.path.isfile(full_path):
+            print(f"  FILE: {file}")
+        else:
+            print(f"  DIR:  {file}")
 
 def analyze_folders_for_threshold(folders=["./images/ronnychieng", "./images/ronnychieng_test"]):
     """
     Analyze hamming distances in multiple folders to determine optimal threshold
     """
     all_results = {}
+    
+    # First, debug what's in each folder
+    for folder_path in folders:
+        debug_folder_contents(folder_path)
     
     for folder_path in folders:
         print(f"\n{'='*60}")
@@ -90,12 +121,17 @@ def analyze_folders_for_threshold(folders=["./images/ronnychieng", "./images/ron
         image_hashes = {}
         
         for img_path in image_files:
+            # Double-check file exists before processing
+            if not os.path.isfile(img_path):
+                print(f"✗ File not found: {os.path.basename(img_path)}")
+                continue
+                
             hash_value = get_dinohash(img_path)
             if hash_value:
                 image_hashes[img_path] = hash_value
                 print(f"✓ {os.path.basename(img_path)}")
             else:
-                print(f"✗ Failed: {os.path.basename(img_path)}")
+                print(f"✗ Failed to hash: {os.path.basename(img_path)}")
         
         successful_images = list(image_hashes.keys())
         print(f"\nSuccessfully hashed {len(successful_images)} images")
@@ -207,5 +243,33 @@ def analyze_folders_for_threshold(folders=["./images/ronnychieng", "./images/ron
 
 # Example usage
 if __name__ == "__main__":
-    # Analyze both ronnychieng folders to determine threshold
-    results = analyze_folders_for_threshold(["./images/ronnychieng", "./images/ronnychieng_test"])
+    # Since you're running from elifiles directory, use the correct paths
+    current_dir = os.getcwd()
+    print(f"Current working directory: {current_dir}")
+    
+    # Check if images folder exists in current directory
+    images_dir = "./images"
+    if os.path.exists(images_dir):
+        print(f"Found images directory: {os.path.abspath(images_dir)}")
+        
+        # List subdirectories in images
+        subdirs = [d for d in os.listdir(images_dir) if os.path.isdir(os.path.join(images_dir, d))]
+        print(f"Subdirectories in images: {subdirs}")
+        
+        # Analyze both ronnychieng folders if they exist
+        folders_to_analyze = []
+        for folder_name in ["ronnychieng", "ronnychieng_test"]:
+            folder_path = os.path.join(images_dir, folder_name)
+            if os.path.exists(folder_path):
+                folders_to_analyze.append(folder_path)
+                print(f"✓ Will analyze: {folder_path}")
+            else:
+                print(f"✗ Folder not found: {folder_path}")
+        
+        if folders_to_analyze:
+            results = analyze_folders_for_threshold(folders_to_analyze)
+        else:
+            print("No ronnychieng folders found to analyze!")
+    else:
+        print(f"Images directory not found at: {os.path.abspath(images_dir)}")
+        print("Please check your current directory and folder structure.")
