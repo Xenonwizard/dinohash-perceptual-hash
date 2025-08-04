@@ -277,13 +277,25 @@ def compare_faces_with_threshold(img1_path, img2_path, threshold=0.80, save_face
                 print(f"  Total bits: {total_bits}")
                 print(f"  Similarity score: {similarity:.4f}")
                 
-                # Check against threshold
-                is_same = similarity >= threshold
+                # # Check against threshold
+                # is_same = similarity >= threshold
                 
+                # if is_same:
+                #     print(f"✅ SAME PERSON: Similarity {similarity:.3f} >= threshold {threshold}")
+                # else:
+                #     print(f"❌ DIFFERENT PEOPLE: Similarity {similarity:.3f} < threshold {threshold}")
+                # Replace this section:
+                is_same = similarity >= threshold
+
+                # With this:
+                max_bit_difference = 21
+                is_same = hamming_distance <= max_bit_difference
+
+                # And update the print statements:
                 if is_same:
-                    print(f"✅ SAME PERSON: Similarity {similarity:.3f} >= threshold {threshold}")
+                    print(f"✅ SAME PERSON: {hamming_distance} bits different <= {max_bit_difference} max")
                 else:
-                    print(f"❌ DIFFERENT PEOPLE: Similarity {similarity:.3f} < threshold {threshold}")
+                    print(f"❌ DIFFERENT PEOPLE: {hamming_distance} bits different > {max_bit_difference} max")
                 
                 return is_same, similarity
                 
@@ -309,30 +321,64 @@ def extract_hex_hash(hash_string):
     return hash_string.strip()
 
 # Example usage
-if __name__ == "__main__":
-    # Compare faces in two images
-    img1 = "./images/ronnychieng/download (8).jpeg"
-    img2 = "./images/ronnychieng/download (10).jpeg"
+# if __name__ == "__main__":
+#     # Compare faces in two images
+#     img1 = "./images/ronnychieng/download (8).jpeg"
+#     img2 = "./images/ronnychieng/download (10).jpeg"
     
-    if os.path.exists(img1) and os.path.exists(img2):
-        # Try different thresholds to find what works best
-        thresholds = [0.95, 0.90, 0.85, 0.80, 0.75]
+#     if os.path.exists(img1) and os.path.exists(img2):
+#         # Try different thresholds to find what works best
+#         thresholds = [0.95, 0.90, 0.85, 0.80, 0.75]
         
-        print("Testing different similarity thresholds:")
-        print("="*60)
+#         print("Testing different similarity thresholds:")
+#         print("="*60)
         
-        for thresh in thresholds:
-            print(f"\n--- Testing threshold: {thresh} ---")
-            # is_same, similarity = compare_faces_with_threshold(img1, img2, threshold=thresh, save_faces=(thresh==0.80))
-            is_same, similarity = compare_faces_with_threshold(img1, img2, threshold=thresh, save_faces=(thresh==thresholds[0]))
-            print(f"Result: {'SAME PERSON' if is_same else 'DIFFERENT PEOPLE'}")
+#         for thresh in thresholds:
+#             print(f"\n--- Testing threshold: {thresh} ---")
+#             # is_same, similarity = compare_faces_with_threshold(img1, img2, threshold=thresh, save_faces=(thresh==0.80))
+#             is_same, similarity = compare_faces_with_threshold(img1, img2, threshold=thresh, save_faces=(thresh==thresholds[0]))
+#             print(f"Result: {'SAME PERSON' if is_same else 'DIFFERENT PEOPLE'}")
             
-        print("\n" + "="*60)
-        print("Recommendation: Use the threshold that gives the most reasonable results")
-        print("For same person: similarity should be > 0.75-0.85")
-        print("For different people: similarity should be < 0.70")
+#         print("\n" + "="*60)
+#         print("Recommendation: Use the threshold that gives the most reasonable results")
+#         print("For same person: similarity should be > 0.75-0.85")
+#         print("For different people: similarity should be < 0.70")
         
-    else:
-        print("One or both image files not found")
-        print(f"Image 1 exists: {os.path.exists(img1)}")
-        print(f"Image 2 exists: {os.path.exists(img2)}")
+#     else:
+#         print("One or both image files not found")
+#         print(f"Image 1 exists: {os.path.exists(img1)}")
+#         print(f"Image 2 exists: {os.path.exists(img2)}")
+if __name__ == "__main__":
+    import glob
+    from itertools import combinations
+    
+    # Get all images in ronnychieng folder
+    folder_path = "./images/ronnychieng"
+    image_files = glob.glob(os.path.join(folder_path, "*.jpg")) + \
+                  glob.glob(os.path.join(folder_path, "*.jpeg")) + \
+                  glob.glob(os.path.join(folder_path, "*.png"))
+    
+    print(f"Found {len(image_files)} images")
+    
+    same_person_count = 0
+    different_person_count = 0
+    total_comparisons = 0
+    
+    # Compare all pairs
+    for img1, img2 in combinations(image_files[:10], 2):  # Limit to first 10 for testing
+        total_comparisons += 1
+        print(f"\n--- Comparison {total_comparisons} ---")
+        
+        is_same, similarity = compare_faces_with_threshold(img1, img2, threshold=0.80)
+        
+        if is_same:
+            same_person_count += 1
+        else:
+            different_person_count += 1
+    
+    print(f"\n{'='*60}")
+    print(f"RESULTS:")
+    print(f"Total comparisons: {total_comparisons}")
+    print(f"Same person: {same_person_count}")
+    print(f"Different person: {different_person_count}")
+    print(f"Same person rate: {same_person_count/total_comparisons*100:.1f}%")
