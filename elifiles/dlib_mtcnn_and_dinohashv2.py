@@ -92,8 +92,8 @@ def normalize_face_crop(face_image, target_size=(160, 160)):
     lab = cv2.cvtColor(resized, cv2.COLOR_BGR2LAB)
     
     # Apply CLAHE (Contrast Limited Adaptive Histogram Equalization) to L channel
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    lab[:, :, 0] = clahe.apply(lab[:, :, 0])
+    # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    # lab[:, :, 0] = clahe.apply(lab[:, :, 0])
     
     # Convert back to BGR
     normalized = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
@@ -152,7 +152,7 @@ def extract_and_align_face(image_path, output_path):
         x, y, w, h = best_face['box']
         
         # Calculate padding based on face size
-        padding = max(w, h) // 4  # 25% padding
+        padding = max(w, h) // 8  # 12.5% padding
         x = max(0, x - padding)
         y = max(0, y - padding)
         w = min(img_rgb.shape[1] - x, w + 2*padding)
