@@ -17,29 +17,28 @@ def get_dinohash(image_path):
         # Convert to absolute path to avoid path issues
         abs_image_path = os.path.abspath(image_path)
         
-        # Debug: print the paths being used
-        print(f"    Original path: {image_path}")
-        print(f"    Absolute path: {abs_image_path}")
-        print(f"    File exists: {os.path.exists(abs_image_path)}")
-        
         # Run the command line version with absolute path
         result = subprocess.run([
             'python3', 'hashes/dinohash.py', abs_image_path
         ], 
         capture_output=True, 
         text=True, 
-        cwd='/home/ssm-user/dinohash-perceptual-hash'
+        cwd='/home/ssm-user/dinohash-perceptual-hash',
+        timeout=30  # Add timeout to prevent hanging
         )
         
         if result.returncode == 0:
             # Return the hash (strip whitespace)
             return result.stdout.strip()
         else:
-            print(f"    Error output: {result.stderr.strip()}")
+            # Only print error for first failed file to avoid spam
             return None
             
+    except subprocess.TimeoutExpired:
+        print(f"    Timeout processing {os.path.basename(image_path)}")
+        return None
     except Exception as e:
-        print(f"    Failed to run dinohash command: {e}")
+        print(f"    Exception processing {os.path.basename(image_path)}: {e}")
         return None
 
 def hamming_distance(hash1, hash2):
@@ -127,22 +126,26 @@ def analyze_folders_for_threshold(folders=["./images/ronnychieng", "./images/ron
         # Generate hashes for all images
         print("Generating hashes...")
         image_hashes = {}
+        failed_count = 0
         
-        for img_path in image_files:
+        for i, img_path in enumerate(image_files, 1):
             # Double-check file exists before processing
             if not os.path.isfile(img_path):
                 print(f"✗ File not found: {os.path.basename(img_path)}")
+                failed_count += 1
                 continue
                 
+            print(f"Processing {i}/{len(image_files)}: {os.path.basename(img_path)}", end=" ")
             hash_value = get_dinohash(img_path)
             if hash_value:
                 image_hashes[img_path] = hash_value
-                print(f"✓ {os.path.basename(img_path)}")
+                print("✓")
             else:
-                print(f"✗ Failed to hash: {os.path.basename(img_path)}")
+                print("✗")
+                failed_count += 1
         
         successful_images = list(image_hashes.keys())
-        print(f"\nSuccessfully hashed {len(successful_images)} images")
+        print(f"\nSuccessfully hashed {len(successful_images)} images ({failed_count} failed)")
         
         if len(successful_images) < 2:
             print("Not enough images for comparison.")
