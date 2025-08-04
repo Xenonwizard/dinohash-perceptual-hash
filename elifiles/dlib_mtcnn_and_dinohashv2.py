@@ -121,11 +121,20 @@ def extract_and_align_face(image_path, output_path):
         # Convert BGR to RGB for MTCNN
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         
-        # Initialize MTCNN detector
-        detector = MTCNN()
+        # # Initialize MTCNN detector
+        # detector = MTCNN()
         
-        # Detect faces with landmarks
-        faces = detector.detect_faces(img_rgb)
+        # # Detect faces with landmarks
+        # faces = detector.detect_faces(img_rgb)
+         # Suppress MTCNN progress bars
+        import sys
+        from contextlib import redirect_stdout
+        import io
+        
+        # Initialize MTCNN detector and detect faces silently
+        with redirect_stdout(io.StringIO()):
+            detector = MTCNN()
+            faces = detector.detect_faces(img_rgb)
         
         if not faces:
             print(f"No face detected in {image_path}")
