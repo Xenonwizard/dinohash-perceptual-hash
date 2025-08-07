@@ -1,0 +1,49 @@
+INDIVIDUAL IMAGE ANALYSIS REPORT
+================================================================================
+
+TOP 10 BEST QUALITY RESULTS:
+----------------------------------------
+Image ID        SSIM     PSNR     Confidence   Notes               
+----------------------------------------------------------------------
+sample_009      0.990    35.0     0.686        Standard            
+sample_018      0.990    36.0     0.923        Standard            
+sample_032      0.990    36.6     0.916        Standard            
+sample_037      0.990    31.6     0.982        Standard            
+sample_052      0.990    35.7     0.907        Standard            
+sample_084      0.990    35.5     0.881        Standard            
+sample_086      0.990    30.5     0.975        Standard            
+sample_089      0.990    32.1     0.898        Standard            
+sample_099      0.990    32.0     0.797        Standard            
+sample_007      0.989    36.9     0.938        Standard            
+
+BOTTOM 10 WORST QUALITY RESULTS:
+----------------------------------------
+Image ID        SSIM     PSNR     Confidence   Issues                        
+--------------------------------------------------------------------------------
+sample_021      0.730    29.1     0.282        Low confidence                
+sample_060      0.742    29.4     0.265        Low confidence; Poor edge preservation
+sample_064      0.759    34.1     0.599        High sharpness loss; Low confidence
+sample_074      0.760    28.0     0.282        Low confidence                
+sample_025      0.781    28.1     0.533        Low confidence; Poor edge preservation
+sample_050      0.784    28.8     0.381        Low confidence; Poor edge preservation
+sample_019      0.790    29.0     0.801        Unknown cause                 
+sample_083      0.794    33.8     0.469        Low confidence                
+sample_001      0.794    30.6     0.581        Low confidence; Poor edge preservation
+sample_041      0.795    31.8     0.690        Low confidence; Poor edge preservation
+
+STATISTICAL OUTLIERS:
+----------------------------------------
+Images with excessive blur degradation (>9.8%):
+  sample_002: 9.9% degradation
+  sample_005: 11.2% degradation
+  sample_012: 9.9% degradation
+  sample_017: 10.0% degradation
+  sample_022: 9.9% degradation
+  sample_027: 10.3% degradation
+  sample_056: 10.4% degradation
+  sample_060: 14.2% degradation
+  sample_074: 11.7% degradation
+
+Low confidence but high quality (2 images):
+  sample_009: Conf=0.686, SSIM=0.990
+  sample_029: Conf=0.636, SSIM=0.951

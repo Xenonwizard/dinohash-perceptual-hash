@@ -1,0 +1,36 @@
+MTCNN QUALITY ASSESSMENT - DETAILED ANALYSIS
+================================================================================
+
+OVERALL QUALITY ASSESSMENT:
+----------------------------------------
+🟡 Overall Rating: GOOD - Acceptable quality preservation
+Average SSIM: 0.8851
+
+QUALITY DEGRADATION ANALYSIS:
+----------------------------------------
+Blur degradation: 3.43% average
+  ✅ GOOD: Minimal blur degradation
+Sharpness degradation: 5.26% average
+  ✅ GOOD: Minimal sharpness degradation
+Contrast change: 0.52% average
+  ✅ GOOD: Minimal contrast change
+
+EDGE PRESERVATION:
+Average edge preservation: 0.7489
+  ⚠️  WARNING: Significant edge information loss
+
+CONFIDENCE-QUALITY RELATIONSHIP:
+----------------------------------------
+Correlation between face confidence and quality: 0.7005
+  ✅ STRONG: Higher confidence typically means better quality
+
+PROBLEM CASES ANALYSIS:
+----------------------------------------
+Found 2 poor quality cases (SSIM < 0.75):
+  Average confidence: 0.273
+  Average blur degradation: 7.49%
+  Average sharpness degradation: 5.19%
+
+  Worst quality images:
+    sample_021: SSIM=0.730, Confidence=0.282
+    sample_060: SSIM=0.742, Confidence=0.265

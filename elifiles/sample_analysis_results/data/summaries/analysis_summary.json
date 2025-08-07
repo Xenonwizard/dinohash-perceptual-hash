@@ -1,0 +1,105 @@
+{
+  "dataset_info": {
+    "total_images": 100,
+    "successful_detections": 100,
+    "analysis_timestamp": "2025-08-07T03:23:42.422482"
+  },
+  "quality_metrics": {
+    "overall_ssim": {
+      "mean": 0.885067771526681,
+      "std": 0.06288844260661573,
+      "median": 0.8897871288997987,
+      "min": 0.7295126092564119,
+      "max": 0.99
+    },
+    "overall_psnr": {
+      "mean": 32.64144050690231,
+      "std": 2.179430140923944,
+      "median": 32.69242028924181
+    },
+    "degradation_metrics": {
+      "blur_degradation_percent": 3.426777698175051,
+      "sharpness_degradation_percent": 5.264286845005447,
+      "contrast_change_percent": 0.5152776231528402
+    }
+  },
+  "quality_distribution": {
+    "Good": 54,
+    "Fair": 29,
+    "Excellent": 15,
+    "Poor": 2
+  },
+  "detection_performance": {
+    "average_confidence": 0.7601498914751911,
+    "low_confidence_count": 31,
+    "average_detection_time": 0.10034445859488857
+  },
+  "processing_efficiency": {
+    "average_size_reduction_ratio": 0.023813771485446358,
+    "total_processing_time": 10.034445859488857
+  },
+  "problem_cases": {
+    "poor_quality_count": 2,
+    "low_confidence_count": 31,
+    "high_degradation_count": 0
+  },
+  "correlations": {
+    "confidence_quality": 0.7005370634046938,
+    "time_quality": 0.13232689834642927,
+    "size_quality": 0.14498391187493273
+  },
+  "best_images": [
+    {
+      "image_id": "sample_009",
+      "ssim_score": 0.99,
+      "face_confidence": 0.6861272773495342
+    },
+    {
+      "image_id": "sample_018",
+      "ssim_score": 0.99,
+      "face_confidence": 0.922505542012692
+    },
+    {
+      "image_id": "sample_032",
+      "ssim_score": 0.99,
+      "face_confidence": 0.9161608776501381
+    },
+    {
+      "image_id": "sample_037",
+      "ssim_score": 0.99,
+      "face_confidence": 0.9818588284817293
+    },
+    {
+      "image_id": "sample_052",
+      "ssim_score": 0.99,
+      "face_confidence": 0.9071367311747381
+    }
+  ],
+  "worst_images": [
+    {
+      "image_id": "sample_021",
+      "ssim_score": 0.7295126092564119,
+      "face_confidence": 0.281745280434126
+    },
+    {
+      "image_id": "sample_060",
+      "ssim_score": 0.7417563926098947,
+      "face_confidence": 0.2652130604138517
+    },
+    {
+      "image_id": "sample_064",
+      "ssim_score": 0.7590940953551308,
+      "face_confidence": 0.5993509902953689
+    },
+    {
+      "image_id": "sample_074",
+      "ssim_score": 0.7595774772483059,
+      "face_confidence": 0.2819003196469533
+    },
+    {
+      "image_id": "sample_025",
+      "ssim_score": 0.7808658975256281,
+      "face_confidence": 0.5332292569188475
+    }
+  ]
+}

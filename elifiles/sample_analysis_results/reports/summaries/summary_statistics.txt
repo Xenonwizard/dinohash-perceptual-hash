@@ -1,0 +1,78 @@
+MTCNN VS ORIGINAL IMAGE QUALITY ANALYSIS - SUMMARY STATISTICS
+================================================================================
+
+DATASET OVERVIEW:
+----------------------------------------
+Total images processed: 100
+Successful face detections: 100 (100%)
+Average face confidence: 0.760 (±0.172)
+Average detection time: 0.100 seconds
+
+QUALITY METRICS SUMMARY:
+----------------------------------------
+SSIM (Structural Similarity):
+  Mean: 0.8851 (±0.0629)
+  Median: 0.8898
+  Range: [0.7295, 0.9900]
+  Interpretation: higher is better
+
+PSNR (Peak Signal-to-Noise Ratio):
+  Mean: 32.6414 (±2.1794)
+  Median: 32.6924
+  Range: [26.9865, 36.8811]
+  Interpretation: higher is better
+
+MSE (Mean Squared Error):
+  Mean: 117.2310 (±125.0360)
+  Median: 82.3757
+  Range: [1.0870, 607.1641]
+  Interpretation: lower is better
+
+MAE (Mean Absolute Error):
+  Mean: 22.0976 (±21.8541)
+  Median: 17.8685
+  Range: [0.0765, 120.8829]
+  Interpretation: lower is better
+
+Blur Degradation (%):
+  Mean: 3.4268 (±3.2049)
+  Median: 2.3885
+  Range: [0.0013, 14.2130]
+  Interpretation: lower is better
+
+Sharpness Degradation (%):
+  Mean: 5.2643 (±5.8666)
+  Median: 3.3124
+  Range: [0.0006, 33.1232]
+  Interpretation: lower is better
+
+Contrast Change (%):
+  Mean: 0.5153 (±4.9979)
+  Median: 0.2575
+  Range: [-10.7830, 12.9478]
+  Interpretation: closer to 0 is better
+
+Histogram Correlation:
+  Mean: 0.8169 (±0.1075)
+  Median: 0.8255
+  Range: [0.5246, 0.9941]
+  Interpretation: higher is better
+
+Edge Preservation:
+  Mean: 0.7489 (±0.1414)
+  Median: 0.7783
+  Range: [0.3605, 0.9704]
+  Interpretation: higher is better
+
+QUALITY CATEGORY DISTRIBUTION:
+----------------------------------------
+Good: 54 images (54.0%)
+Fair: 29 images (29.0%)
+Excellent: 15 images (15.0%)
+Poor: 2 images (2.0%)
+
+PROCESSING EFFICIENCY:
+----------------------------------------
+Average size reduction: 97.6%
+Average processing time per image: 0.100 seconds
+Total processing time: 10.03 seconds
