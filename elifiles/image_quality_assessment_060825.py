@@ -1539,7 +1539,7 @@ import glob
 import random
 from pathlib import Path
 
-def setup_celebrity_analysis(base_path="elifiles/images/celeb-dataset"):
+def setup_celebrity_analysis(base_path="./images/celeb-dataset"):
     """
     Set up analysis for celebrity dataset with 20 images per celebrity
     """
