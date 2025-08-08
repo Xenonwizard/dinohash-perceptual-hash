@@ -60,12 +60,11 @@ class MTCNNOriginalComparator:
             print(f"Error loading {image_path}: {str(e)}")
             return None
 
-    def detect_and_extract_face(self, image, min_face_size=40, thresholds=[0.6, 0.7, 0.7], scale_factor=0.709):
+    def detect_and_extract_face(self, image, min_face_size=40, scale_factor=0.709):
         """Detect face using MTCNN and extract face region"""
         try:
             from mtcnn import MTCNN
             detector = MTCNN(min_face_size=min_face_size, 
-                           thresholds=thresholds, 
                            scale_factor=scale_factor)
             
             start_time = time.time()
