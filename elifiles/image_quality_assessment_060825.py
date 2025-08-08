@@ -1396,140 +1396,270 @@ def generate_cross_dataset_report(all_results, output_dir):
 
 
 # Main execution function
+# if __name__ == "__main__":
+#     print("🚀 MTCNN vs Original Image Quality Analyzer")
+#     print("=" * 50)
+    
+#     # Example usage - uncomment and modify paths as needed
+    
+#     # Single dataset analysis
+#     """
+#     image_directory = "path/to/your/images"
+#     comparator = run_complete_analysis(
+#         image_directory,
+#         output_dir='my_mtcnn_analysis',
+#         mtcnn_params={'min_face_size': 40, 'thresholds': [0.6, 0.7, 0.7], 'scale_factor': 0.709}
+#     )
+#     """
+    
+#     # Parameter comparison
+#     """
+#     comparison_results = compare_mtcnn_parameters(
+#         image_directory="path/to/your/images",
+#         output_base_dir='parameter_comparison_results'
+#     )
+#     """
+    
+#     # Batch analysis of multiple datasets
+#     """
+#     dataset_configs = {
+#         'high_res_faces': {
+#             'image_directory': 'path/to/high_res_dataset',
+#             'mtcnn_params': {'min_face_size': 60, 'thresholds': [0.6, 0.7, 0.7], 'scale_factor': 0.7}
+#         },
+#         'mobile_photos': {
+#             'image_directory': 'path/to/mobile_dataset',
+#             'mtcnn_params': {'min_face_size': 40, 'thresholds': [0.5, 0.6, 0.6], 'scale_factor': 0.709}
+#         }
+#     }
+    
+#     batch_results = batch_analyze_datasets(dataset_configs, 'batch_analysis_results')
+#     """
+    
+#     # For testing with sample data
+#     print("Creating sample data for demonstration...")
+    
+#     # Generate sample results for testing
+#     sample_data = []
+#     np.random.seed(42)
+    
+#     for i in range(100):
+#         # Simulate realistic MTCNN processing results
+#         confidence = np.random.beta(5, 1.5)  # Higher confidence more likely
+        
+#         # Quality correlates with confidence but has noise
+#         base_ssim = 0.7 + 0.25 * confidence + np.random.normal(0, 0.05)
+#         base_ssim = np.clip(base_ssim, 0.3, 0.99)
+        
+#         psnr = 15 + base_ssim * 20 + np.random.normal(0, 2)
+        
+#         # Degradation metrics
+#         blur_deg = np.random.exponential(5) if confidence < 0.8 else np.random.exponential(2)
+#         sharp_deg = np.random.exponential(8) if confidence < 0.7 else np.random.exponential(3)
+        
+#         sample_data.append({
+#             'image_id': f'sample_{i:03d}',
+#             'image_path': f'/fake/path/sample_{i:03d}.jpg',
+#             'face_confidence': confidence,
+#             'detection_time': np.random.exponential(0.1),
+#             'original_size': np.random.randint(500000, 2000000),
+#             'face_region_size': np.random.randint(50000, 200000),
+#             'processed_size': 25600,  # 160x160
+#             'face_box': [np.random.randint(50, 200), np.random.randint(50, 200), 
+#                         np.random.randint(100, 300), np.random.randint(100, 300)],
+#             'min_face_size': 40,
+#             'thresholds': [0.6, 0.7, 0.7],
+#             'scale_factor': 0.709,
+#             'ssim_score': base_ssim,
+#             'psnr_score': psnr,
+#             'mse_score': np.random.exponential(100),
+#             'mae_score': np.random.exponential(20),
+#             'original_blur': np.random.exponential(100),
+#             'processed_blur': np.random.exponential(100),
+#             'blur_degradation': blur_deg,
+#             'original_sharpness': np.random.gamma(2, 500),
+#             'processed_sharpness': np.random.gamma(2, 500),
+#             'sharpness_degradation': sharp_deg,
+#             'original_contrast': np.random.normal(50, 10),
+#             'processed_contrast': np.random.normal(50, 10),
+#             'contrast_change': np.random.normal(0, 5),
+#             'histogram_correlation': np.random.beta(8, 2),
+#             'edge_preservation': np.random.beta(6, 2),
+#             'mean_pixel_diff': np.random.normal(0, 10),
+#             'std_pixel_diff': np.random.exponential(15)
+#         })
+    
+#     # Initialize comparator and test with sample data
+#     comparator = MTCNNOriginalComparator('sample_analysis_results')
+#     comparator.all_results = sample_data
+    
+#     # Create DataFrame and run analysis
+#     sample_df = pd.DataFrame(sample_data)
+    
+#     # Add quality categories
+#     def categorize_quality(ssim):
+#         if ssim >= 0.95:
+#             return 'Excellent'
+#         elif ssim >= 0.85:
+#             return 'Good'
+#         elif ssim >= 0.75:
+#             return 'Fair'
+#         else:
+#             return 'Poor'
+    
+#     sample_df['quality_category'] = sample_df['ssim_score'].apply(categorize_quality)
+#     sample_df['size_reduction_ratio'] = sample_df['processed_size'] / sample_df['face_region_size']
+    
+#     print(f"✅ Generated sample data with {len(sample_df)} entries")
+#     print("🔄 Running complete analysis on sample data...")
+    
+#     # Save sample data
+#     sample_df.to_csv(comparator.output_dir / 'data/summaries/all_results.csv', index=False)
+    
+#     # Generate all analyses
+#     comparator.generate_all_analyses(sample_df)
+    
+#     print(f"\n🎉 Sample analysis complete!")
+#     print(f"📁 Results saved to: {comparator.output_dir}")
+#     print("\n📋 Generated files:")
+#     print("  📊 Quality distribution plots")
+#     print("  📈 Original vs processed comparisons") 
+#     print("  📉 Degradation analysis")
+#     print("  🔍 Confidence-quality relationships")
+#     print("  ⚙️  Processing impact analysis")
+#     print("  📄 Detailed text reports")
+#     print("  💾 JSON summary data")
+#     print("  🖼️  Individual result files")
+    
+#     print(f"\n💡 To analyze your own images, modify the paths in the script and run:")
+#     print(f"   comparator = run_complete_analysis('your/image/directory')")
+# Celebrity Dataset Analysis Configuration
+import os
+import glob
+import random
+from pathlib import Path
+
+def setup_celebrity_analysis(base_path="elifiles/images/celeb-dataset"):
+    """
+    Set up analysis for celebrity dataset with 20 images per celebrity
+    """
+    
+    # Define the structure based on your file tree
+    races = ['caucasian', 'chinese', 'indian', 'malay']
+    
+    dataset_configs = {}
+    
+    for race in races:
+        race_path = Path(base_path) / race
+        
+        # Get all celebrity folders in this race
+        celebrity_folders = [d for d in race_path.iterdir() if d.is_dir() and not d.name.endswith('_test')]
+        
+        for celeb_folder in celebrity_folders:
+            celeb_name = celeb_folder.name
+            
+            # Get all image files in celebrity folder
+            image_extensions = ['*.jpg', '*.jpeg', '*.png', '*.bmp', '*.tiff']
+            all_images = []
+            
+            for ext in image_extensions:
+                all_images.extend(celeb_folder.glob(ext))
+            
+            # Randomly sample 20 images (or all if less than 20)
+            if len(all_images) >= 20:
+                selected_images = random.sample(all_images, 20)
+            else:
+                selected_images = all_images
+                print(f"⚠️ {race}/{celeb_name} only has {len(all_images)} images (using all)")
+            
+            # Create config for this celebrity
+            config_key = f"{race}_{celeb_name}"
+            dataset_configs[config_key] = {
+                'image_directory': str(celeb_folder),
+                'selected_images': [str(img) for img in selected_images],
+                'race': race,
+                'celebrity': celeb_name,
+                'image_count': len(selected_images),
+                'mtcnn_params': {
+                    'min_face_size': 40, 
+                    'thresholds': [0.6, 0.7, 0.7], 
+                    'scale_factor': 0.709
+                }
+            }
+    
+    return dataset_configs
+
+def run_celebrity_batch_analysis():
+    """
+    Run the complete celebrity analysis
+    """
+    print("🎭 Celebrity Dataset MTCNN Analysis")
+    print("=" * 60)
+    
+    # Setup configurations
+    dataset_configs = setup_celebrity_analysis()
+    
+    print(f"📊 Found {len(dataset_configs)} celebrity configurations:")
+    
+    # Print summary
+    race_counts = {}
+    total_images = 0
+    
+    for config_key, config in dataset_configs.items():
+        race = config['race']
+        race_counts[race] = race_counts.get(race, 0) + 1
+        total_images += config['image_count']
+        
+        print(f"  📸 {config['race']:<10} | {config['celebrity']:<20} | {config['image_count']} images")
+    
+    print(f"\n📈 Summary:")
+    for race, count in race_counts.items():
+        print(f"  {race.capitalize():<10}: {count} celebrities")
+    print(f"  Total images: {total_images}")
+    
+    # Run batch analysis
+    print(f"\n🚀 Starting batch analysis...")
+    
+    try:
+        batch_results = batch_analyze_datasets(
+            dataset_configs, 
+            'celebrity_mtcnn_analysis'
+        )
+        
+        print(f"\n🎉 Celebrity analysis complete!")
+        print(f"📁 Results saved to: celebrity_mtcnn_analysis/")
+        
+        # Generate summary by race
+        generate_race_summary(batch_results)
+        
+        return batch_results
+        
+    except Exception as e:
+        print(f"❌ Error during analysis: {str(e)}")
+        return None
+
+def generate_race_summary(batch_results):
+    """
+    Generate summary statistics by race
+    """
+    print(f"\n📊 Generating race-based summary...")
+    
+    # You can add race-specific analysis here
+    # This would aggregate results by race for comparison
+    
+    pass
+
+# Main execution for celebrity dataset
 if __name__ == "__main__":
-    print("🚀 MTCNN vs Original Image Quality Analyzer")
-    print("=" * 50)
+    # Set random seed for reproducible image selection
+    random.seed(42)
     
-    # Example usage - uncomment and modify paths as needed
+    # Run the celebrity analysis
+    results = run_celebrity_batch_analysis()
     
-    # Single dataset analysis
-    """
-    image_directory = "path/to/your/images"
-    comparator = run_complete_analysis(
-        image_directory,
-        output_dir='my_mtcnn_analysis',
-        mtcnn_params={'min_face_size': 40, 'thresholds': [0.6, 0.7, 0.7], 'scale_factor': 0.709}
-    )
-    """
-    
-    # Parameter comparison
-    """
-    comparison_results = compare_mtcnn_parameters(
-        image_directory="path/to/your/images",
-        output_base_dir='parameter_comparison_results'
-    )
-    """
-    
-    # Batch analysis of multiple datasets
-    """
-    dataset_configs = {
-        'high_res_faces': {
-            'image_directory': 'path/to/high_res_dataset',
-            'mtcnn_params': {'min_face_size': 60, 'thresholds': [0.6, 0.7, 0.7], 'scale_factor': 0.7}
-        },
-        'mobile_photos': {
-            'image_directory': 'path/to/mobile_dataset',
-            'mtcnn_params': {'min_face_size': 40, 'thresholds': [0.5, 0.6, 0.6], 'scale_factor': 0.709}
-        }
-    }
-    
-    batch_results = batch_analyze_datasets(dataset_configs, 'batch_analysis_results')
-    """
-    
-    # For testing with sample data
-    print("Creating sample data for demonstration...")
-    
-    # Generate sample results for testing
-    sample_data = []
-    np.random.seed(42)
-    
-    for i in range(100):
-        # Simulate realistic MTCNN processing results
-        confidence = np.random.beta(5, 1.5)  # Higher confidence more likely
-        
-        # Quality correlates with confidence but has noise
-        base_ssim = 0.7 + 0.25 * confidence + np.random.normal(0, 0.05)
-        base_ssim = np.clip(base_ssim, 0.3, 0.99)
-        
-        psnr = 15 + base_ssim * 20 + np.random.normal(0, 2)
-        
-        # Degradation metrics
-        blur_deg = np.random.exponential(5) if confidence < 0.8 else np.random.exponential(2)
-        sharp_deg = np.random.exponential(8) if confidence < 0.7 else np.random.exponential(3)
-        
-        sample_data.append({
-            'image_id': f'sample_{i:03d}',
-            'image_path': f'/fake/path/sample_{i:03d}.jpg',
-            'face_confidence': confidence,
-            'detection_time': np.random.exponential(0.1),
-            'original_size': np.random.randint(500000, 2000000),
-            'face_region_size': np.random.randint(50000, 200000),
-            'processed_size': 25600,  # 160x160
-            'face_box': [np.random.randint(50, 200), np.random.randint(50, 200), 
-                        np.random.randint(100, 300), np.random.randint(100, 300)],
-            'min_face_size': 40,
-            'thresholds': [0.6, 0.7, 0.7],
-            'scale_factor': 0.709,
-            'ssim_score': base_ssim,
-            'psnr_score': psnr,
-            'mse_score': np.random.exponential(100),
-            'mae_score': np.random.exponential(20),
-            'original_blur': np.random.exponential(100),
-            'processed_blur': np.random.exponential(100),
-            'blur_degradation': blur_deg,
-            'original_sharpness': np.random.gamma(2, 500),
-            'processed_sharpness': np.random.gamma(2, 500),
-            'sharpness_degradation': sharp_deg,
-            'original_contrast': np.random.normal(50, 10),
-            'processed_contrast': np.random.normal(50, 10),
-            'contrast_change': np.random.normal(0, 5),
-            'histogram_correlation': np.random.beta(8, 2),
-            'edge_preservation': np.random.beta(6, 2),
-            'mean_pixel_diff': np.random.normal(0, 10),
-            'std_pixel_diff': np.random.exponential(15)
-        })
-    
-    # Initialize comparator and test with sample data
-    comparator = MTCNNOriginalComparator('sample_analysis_results')
-    comparator.all_results = sample_data
-    
-    # Create DataFrame and run analysis
-    sample_df = pd.DataFrame(sample_data)
-    
-    # Add quality categories
-    def categorize_quality(ssim):
-        if ssim >= 0.95:
-            return 'Excellent'
-        elif ssim >= 0.85:
-            return 'Good'
-        elif ssim >= 0.75:
-            return 'Fair'
-        else:
-            return 'Poor'
-    
-    sample_df['quality_category'] = sample_df['ssim_score'].apply(categorize_quality)
-    sample_df['size_reduction_ratio'] = sample_df['processed_size'] / sample_df['face_region_size']
-    
-    print(f"✅ Generated sample data with {len(sample_df)} entries")
-    print("🔄 Running complete analysis on sample data...")
-    
-    # Save sample data
-    sample_df.to_csv(comparator.output_dir / 'data/summaries/all_results.csv', index=False)
-    
-    # Generate all analyses
-    comparator.generate_all_analyses(sample_df)
-    
-    print(f"\n🎉 Sample analysis complete!")
-    print(f"📁 Results saved to: {comparator.output_dir}")
-    print("\n📋 Generated files:")
-    print("  📊 Quality distribution plots")
-    print("  📈 Original vs processed comparisons") 
-    print("  📉 Degradation analysis")
-    print("  🔍 Confidence-quality relationships")
-    print("  ⚙️  Processing impact analysis")
-    print("  📄 Detailed text reports")
-    print("  💾 JSON summary data")
-    print("  🖼️  Individual result files")
-    
-    print(f"\n💡 To analyze your own images, modify the paths in the script and run:")
-    print(f"   comparator = run_complete_analysis('your/image/directory')")
+    # Optional: Additional analysis
+    if results:
+        print(f"\n💡 Next steps:")
+        print(f"  📈 Check race-specific quality patterns")
+        print(f"  🔍 Analyze celebrity-specific results") 
+        print(f"  📊 Compare processing effectiveness across demographics")
