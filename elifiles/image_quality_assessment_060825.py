@@ -1582,7 +1582,6 @@ def setup_celebrity_analysis(base_path="./images/celeb-dataset"):
                 'image_count': len(selected_images),
                 'mtcnn_params': {
                     'min_face_size': 40, 
-                    'thresholds': [0.6, 0.7, 0.7], 
                     'scale_factor': 0.709
                 }
             }
