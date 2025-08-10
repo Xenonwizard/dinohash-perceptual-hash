@@ -5,6 +5,8 @@ from scipy.stats import pearsonr
 from skimage.feature import local_binary_pattern
 from skimage.metrics import structural_similarity as ssim
 import random
+import time
+import json
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -570,7 +572,8 @@ def main():
     np.random.seed(42)
     
     # Initialize the scientific analyzer
-    analyzer = ScientificFaceQualityAssessment('scientific_mtcnn_results')
+    # analyzer = ScientificFaceQualityAssessment('scientific_mtcnn_results')
+    analyzer = ScientificFaceQualityAssessment()
     
     # Step 1: Run the analysis on celebrity dataset
     print("\n📊 Step 1: Running Quality Analysis...")
