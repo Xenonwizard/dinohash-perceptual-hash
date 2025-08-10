@@ -555,3 +555,175 @@ def validate_scientific_approach():
     print("• Structural Integrity: 20% (geometric preservation)")
     print("• Technical Quality: 15% (traditional metrics)")
     print("\nOutput interpretation aligned with psychophysical research")
+
+def main():
+    """
+    MAIN EXECUTION METHOD
+    Run scientific MTCNN quality assessment on celebrity dataset
+    """
+    print("🔬 Scientific MTCNN Face Quality Assessment")
+    print("=" * 60)
+    
+    # Set random seed for reproducibility
+    random.seed(42)
+    np.random.seed(42)
+    
+    # Initialize the scientific analyzer
+    analyzer = ScientificMTCNNQualityAnalyzer('scientific_mtcnn_results')
+    
+    # Step 1: Run the analysis on celebrity dataset
+    print("\n📊 Step 1: Running Quality Analysis...")
+    try:
+        summaries = analyzer.analyze_dataset('./images/celeb-dataset')
+        print(f"✅ Successfully analyzed {len(summaries)} celebrities")
+    except Exception as e:
+        print(f"❌ Error in analysis: {e}")
+        return None
+    
+    # Step 2: Generate comprehensive report
+    print("\n📈 Step 2: Generating Scientific Report...")
+    try:
+        report = analyzer.generate_scientific_report()
+        print("✅ Scientific report generated")
+    except Exception as e:
+        print(f"❌ Error generating report: {e}")
+        report = None
+    
+    # Step 3: Validate against human ratings (if available)
+    print("\n🧪 Step 3: Statistical Validation...")
+    try:
+        validation_results = analyzer.validate_with_human_ratings()
+        if validation_results:
+            print("✅ Validation completed")
+            print(f"   Pearson correlation: {validation_results['pearson_r']:.3f}")
+            print(f"   Statistical significance: {validation_results['is_significant']}")
+        else:
+            print("⚠️  Human ratings not available - skipping validation")
+    except Exception as e:
+        print(f"❌ Error in validation: {e}")
+        validation_results = None
+    
+    # Step 4: Bias analysis
+    print("\n🔍 Step 4: Bias Analysis...")
+    try:
+        bias_analysis = analyzer.perform_bias_analysis()
+        if bias_analysis:
+            risk_level = bias_analysis['overall_risk']['risk_level']
+            print(f"✅ Bias analysis completed - Risk Level: {risk_level}")
+        else:
+            print("⚠️  Insufficient data for bias analysis")
+    except Exception as e:
+        print(f"❌ Error in bias analysis: {e}")
+        bias_analysis = None
+    
+    # Step 5: Final summary
+    print("\n🎯 FINAL RESULTS")
+    print("=" * 30)
+    
+    if summaries:
+        overall_quality = np.mean([s['scientific_quality_score'] for s in summaries])
+        best_celebrity = max(summaries, key=lambda x: x['scientific_quality_score'])
+        worst_celebrity = min(summaries, key=lambda x: x['scientific_quality_score'])
+        
+        print(f"Overall Quality Index: {overall_quality:.3f}/1.0")
+        print(f"Best performing: {best_celebrity['celebrity']} ({best_celebrity['scientific_quality_score']:.3f})")
+        print(f"Needs improvement: {worst_celebrity['celebrity']} ({worst_celebrity['scientific_quality_score']:.3f})")
+        
+        # Grade distribution
+        grades = [s['quality_grade'] for s in summaries]
+        grade_dist = {grade: grades.count(grade) for grade in set(grades)}
+        print(f"Grade distribution: {grade_dist}")
+    
+    if validation_results and validation_results['is_significant']:
+        print(f"✅ Scientifically validated (r = {validation_results['pearson_r']:.3f})")
+    else:
+        print("⚠️  Validation needed for scientific credibility")
+    
+    if bias_analysis:
+        risk = bias_analysis['overall_risk']['risk_level']
+        if risk == 'LOW':
+            print("✅ Low bias risk - results reliable")
+        elif risk == 'MEDIUM':
+            print("⚠️  Medium bias risk - some concerns")
+        else:
+            print("❌ High bias risk - results questionable")
+    
+    # Step 6: Save all results
+    print("\n💾 Saving Results...")
+    results_file = analyzer.output_dir / 'complete_scientific_analysis.json'
+    
+    complete_results = {
+        'analysis_summary': summaries,
+        'scientific_report': report,
+        'validation_results': validation_results,
+        'bias_analysis': bias_analysis,
+        'metadata': {
+            'analysis_date': time.strftime('%Y-%m-%d %H:%M:%S'),
+            'total_celebrities': len(summaries) if summaries else 0,
+            'methodology': 'Scientific face quality assessment based on peer-reviewed research'
+        }
+    }
+    
+    try:
+        with open(results_file, 'w') as f:
+            json.dump(complete_results, f, indent=2, default=str)
+        print(f"✅ Complete results saved to: {results_file}")
+    except Exception as e:
+        print(f"❌ Error saving results: {e}")
+    
+    print(f"\n📁 All outputs saved to: {analyzer.output_dir}")
+    print("🔬 Scientific MTCNN Analysis Complete!")
+    
+    return complete_results
+
+
+# Alternative simple main for quick testing
+def simple_main():
+    """
+    SIMPLIFIED MAIN - Just run basic analysis without full validation
+    """
+    print("🚀 Quick MTCNN Scientific Analysis")
+    
+    # Initialize
+    analyzer = ScientificMTCNNQualityAnalyzer()
+    
+    # Run analysis
+    summaries = analyzer.analyze_dataset('./images/celeb-dataset')
+    
+    # Print quick results
+    if summaries:
+        avg_quality = np.mean([s['scientific_quality_score'] for s in summaries])
+        print(f"\n📊 Average Quality Score: {avg_quality:.3f}/1.0")
+        print(f"📊 Total Celebrities Analyzed: {len(summaries)}")
+        
+        # Top 3 and bottom 3
+        sorted_results = sorted(summaries, key=lambda x: x['scientific_quality_score'], reverse=True)
+        
+        print(f"\n🥇 Top 3 Quality:")
+        for i, celeb in enumerate(sorted_results[:3]):
+            print(f"   {i+1}. {celeb['celebrity']}: {celeb['scientific_quality_score']:.3f}")
+        
+        print(f"\n📉 Bottom 3 Quality:")
+        for i, celeb in enumerate(sorted_results[-3:]):
+            print(f"   {i+1}. {celeb['celebrity']}: {celeb['scientific_quality_score']:.3f}")
+    
+    return summaries
+
+
+# Entry point selection
+if __name__ == "__main__":
+    import sys
+    
+    # Choose main function based on argument
+    if len(sys.argv) > 1 and sys.argv[1] == 'simple':
+        results = simple_main()
+    else:
+        results = main()
+    
+    # Exit with appropriate code
+    if results:
+        print("\n✅ Analysis completed successfully!")
+        sys.exit(0)
+    else:
+        print("\n❌ Analysis failed!")
+        sys.exit(1)
