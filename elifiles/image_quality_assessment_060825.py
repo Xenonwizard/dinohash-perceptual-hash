@@ -96,7 +96,7 @@ def clean_dataframe(df):
 
     return df
 
-def _get_default_metrics(self):
+def _get_default_metrics():
     """Return default metrics when calculation fails"""
     return {
         'ssim_score': 0.0,
