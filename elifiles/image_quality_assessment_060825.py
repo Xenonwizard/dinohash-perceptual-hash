@@ -92,81 +92,81 @@ class MTCNNOriginalComparator:
             print(f"Error in face detection: {str(e)}")
             return None, None, 0, 0
 
-    def calculate_comprehensive_metrics(self, original_img, processed_img):
-        """Calculate comprehensive quality metrics between original and processed images"""
-        metrics = {}
+    # def calculate_comprehensive_metrics(self, original_img, processed_img):
+    #     """Calculate comprehensive quality metrics between original and processed images"""
+    #     metrics = {}
         
-        try:
-            # Ensure both images are same size for fair comparison
-            if original_img.shape != processed_img.shape:
-                # Resize processed to match original for comparison
-                processed_resized = cv2.resize(processed_img, 
-                                             (original_img.shape[1], original_img.shape[0]))
-            else:
-                processed_resized = processed_img
+    #     try:
+    #         # Ensure both images are same size for fair comparison
+    #         if original_img.shape != processed_img.shape:
+    #             # Resize processed to match original for comparison
+    #             processed_resized = cv2.resize(processed_img, 
+    #                                          (original_img.shape[1], original_img.shape[0]))
+    #         else:
+    #             processed_resized = processed_img
             
-            # Convert to grayscale for certain metrics
-            orig_gray = cv2.cvtColor(original_img, cv2.COLOR_RGB2GRAY) if len(original_img.shape) == 3 else original_img
-            proc_gray = cv2.cvtColor(processed_resized, cv2.COLOR_RGB2GRAY) if len(processed_resized.shape) == 3 else processed_resized
+    #         # Convert to grayscale for certain metrics
+    #         orig_gray = cv2.cvtColor(original_img, cv2.COLOR_RGB2GRAY) if len(original_img.shape) == 3 else original_img
+    #         proc_gray = cv2.cvtColor(processed_resized, cv2.COLOR_RGB2GRAY) if len(processed_resized.shape) == 3 else processed_resized
             
-            # 1. SSIM (Structural Similarity Index)
-            metrics['ssim_score'] = ssim(orig_gray, proc_gray, data_range=255)
+    #         # 1. SSIM (Structural Similarity Index)
+    #         metrics['ssim_score'] = ssim(orig_gray, proc_gray, data_range=255)
             
-            # 2. PSNR (Peak Signal-to-Noise Ratio)  
-            metrics['psnr_score'] = psnr(orig_gray, proc_gray, data_range=255)
+    #         # 2. PSNR (Peak Signal-to-Noise Ratio)  
+    #         metrics['psnr_score'] = psnr(orig_gray, proc_gray, data_range=255)
             
-            # 3. MSE (Mean Squared Error)
-            metrics['mse_score'] = mse(orig_gray, proc_gray)
+    #         # 3. MSE (Mean Squared Error)
+    #         metrics['mse_score'] = mse(orig_gray, proc_gray)
             
-            # 4. MAE (Mean Absolute Error)
-            metrics['mae_score'] = np.mean(np.abs(orig_gray.astype(float) - proc_gray.astype(float)))
+    #         # 4. MAE (Mean Absolute Error)
+    #         metrics['mae_score'] = np.mean(np.abs(orig_gray.astype(float) - proc_gray.astype(float)))
             
-            # 5. Blur metrics
-            original_blur = cv2.Laplacian(orig_gray, cv2.CV_64F).var()
-            processed_blur = cv2.Laplacian(proc_gray, cv2.CV_64F).var()
-            metrics['original_blur'] = original_blur
-            metrics['processed_blur'] = processed_blur
-            metrics['blur_degradation'] = (original_blur - processed_blur) / original_blur * 100 if original_blur > 0 else 0
+    #         # 5. Blur metrics
+    #         original_blur = cv2.Laplacian(orig_gray, cv2.CV_64F).var()
+    #         processed_blur = cv2.Laplacian(proc_gray, cv2.CV_64F).var()
+    #         metrics['original_blur'] = original_blur
+    #         metrics['processed_blur'] = processed_blur
+    #         metrics['blur_degradation'] = (original_blur - processed_blur) / original_blur * 100 if original_blur > 0 else 0
             
-            # 6. Sharpness metrics (Gradient magnitude)
-            def calculate_sharpness(img):
-                grad_x = cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=3)
-                grad_y = cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=3)
-                return np.sqrt(grad_x**2 + grad_y**2).mean()
+    #         # 6. Sharpness metrics (Gradient magnitude)
+    #         def calculate_sharpness(img):
+    #             grad_x = cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=3)
+    #             grad_y = cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=3)
+    #             return np.sqrt(grad_x**2 + grad_y**2).mean()
             
-            original_sharpness = calculate_sharpness(orig_gray)
-            processed_sharpness = calculate_sharpness(proc_gray)
-            metrics['original_sharpness'] = original_sharpness
-            metrics['processed_sharpness'] = processed_sharpness
-            metrics['sharpness_degradation'] = (original_sharpness - processed_sharpness) / original_sharpness * 100 if original_sharpness > 0 else 0
+    #         original_sharpness = calculate_sharpness(orig_gray)
+    #         processed_sharpness = calculate_sharpness(proc_gray)
+    #         metrics['original_sharpness'] = original_sharpness
+    #         metrics['processed_sharpness'] = processed_sharpness
+    #         metrics['sharpness_degradation'] = (original_sharpness - processed_sharpness) / original_sharpness * 100 if original_sharpness > 0 else 0
             
-            # 7. Contrast metrics
-            original_contrast = orig_gray.std()
-            processed_contrast = proc_gray.std()
-            metrics['original_contrast'] = original_contrast
-            metrics['processed_contrast'] = processed_contrast
-            metrics['contrast_change'] = (processed_contrast - original_contrast) / original_contrast * 100 if original_contrast > 0 else 0
+    #         # 7. Contrast metrics
+    #         original_contrast = orig_gray.std()
+    #         processed_contrast = proc_gray.std()
+    #         metrics['original_contrast'] = original_contrast
+    #         metrics['processed_contrast'] = processed_contrast
+    #         metrics['contrast_change'] = (processed_contrast - original_contrast) / original_contrast * 100 if original_contrast > 0 else 0
             
-            # 8. Histogram correlation
-            hist_orig = cv2.calcHist([orig_gray], [0], None, [256], [0, 256])
-            hist_proc = cv2.calcHist([proc_gray], [0], None, [256], [0, 256])
-            metrics['histogram_correlation'] = cv2.compareHist(hist_orig, hist_proc, cv2.HISTCMP_CORREL)
+    #         # 8. Histogram correlation
+    #         hist_orig = cv2.calcHist([orig_gray], [0], None, [256], [0, 256])
+    #         hist_proc = cv2.calcHist([proc_gray], [0], None, [256], [0, 256])
+    #         metrics['histogram_correlation'] = cv2.compareHist(hist_orig, hist_proc, cv2.HISTCMP_CORREL)
             
-            # 9. Edge preservation
-            edges_orig = cv2.Canny(orig_gray, 50, 150)
-            edges_proc = cv2.Canny(proc_gray, 50, 150)
-            edge_similarity = ssim(edges_orig, edges_proc, data_range=255)
-            metrics['edge_preservation'] = edge_similarity
+    #         # 9. Edge preservation
+    #         edges_orig = cv2.Canny(orig_gray, 50, 150)
+    #         edges_proc = cv2.Canny(proc_gray, 50, 150)
+    #         edge_similarity = ssim(edges_orig, edges_proc, data_range=255)
+    #         metrics['edge_preservation'] = edge_similarity
             
-            # 10. Pixel value statistics
-            metrics['mean_pixel_diff'] = np.mean(orig_gray.astype(float) - proc_gray.astype(float))
-            metrics['std_pixel_diff'] = np.std(orig_gray.astype(float) - proc_gray.astype(float))
+    #         # 10. Pixel value statistics
+    #         metrics['mean_pixel_diff'] = np.mean(orig_gray.astype(float) - proc_gray.astype(float))
+    #         metrics['std_pixel_diff'] = np.std(orig_gray.astype(float) - proc_gray.astype(float))
             
-            return metrics
+    #         return metrics
             
-        except Exception as e:
-            print(f"Error calculating metrics: {str(e)}")
-            return {}
+    #     except Exception as e:
+    #         print(f"Error calculating metrics: {str(e)}")
+    #         return {}
 
     def save_comparison_images(self, original, processed, image_id, face_box=None):
         """Save original, processed, and side-by-side comparison images"""
@@ -1721,7 +1721,7 @@ def safe_percentage_calculation(original, processed):
     
     return result
 
-def calculate_comprehensive_metrics_safe(self, original_img, processed_img):
+def calculate_comprehensive_metrics(self, original_img, processed_img):
     """Calculate comprehensive quality metrics with inf/nan protection"""
     metrics = {}
     
