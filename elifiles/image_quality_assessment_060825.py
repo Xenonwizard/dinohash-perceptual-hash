@@ -469,10 +469,10 @@ class MTCNNOriginalComparator:
         
         # Resize extracted face to target size (simulate typical face recognition preprocessing)
         processed_face = cv2.resize(face_region, target_size)
-        
+
         # For fair comparison, resize the original face region to same target size
-        original_face_resized = cv2.resize(face_region, target_size)
-        
+        original_face_resized = cv2.resize(face_region, target_size)  # ← SAME IMAGE!
+
         # Calculate comprehensive metrics
         metrics = self.calculate_comprehensive_metrics(original_face_resized, processed_face)
         
