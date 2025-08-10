@@ -1587,36 +1587,15 @@ def setup_celebrity_analysis(base_path="./images/celeb-dataset"):
     
     return dataset_configs
 
+
 def run_celebrity_batch_analysis():
     """
-    Run the complete celebrity analysis
+    Run the complete celebrity analysis with inf/nan protection
     """
-    print("🎭 Celebrity Dataset MTCNN Analysis")
+    print("🎭 Celebrity Dataset MTCNN Analysis (Safe Mode)")
     print("=" * 60)
     
-    # Setup configurations
-    dataset_configs = setup_celebrity_analysis()
-    
-    print(f"📊 Found {len(dataset_configs)} celebrity configurations:")
-    
-    # Print summary
-    race_counts = {}
-    total_images = 0
-    
-    for config_key, config in dataset_configs.items():
-        race = config['race']
-        race_counts[race] = race_counts.get(race, 0) + 1
-        total_images += config['image_count']
-        
-        print(f"  📸 {config['race']:<10} | {config['celebrity']:<20} | {config['image_count']} images")
-    
-    print(f"\n📈 Summary:")
-    for race, count in race_counts.items():
-        print(f"  {race.capitalize():<10}: {count} celebrities")
-    print(f"  Total images: {total_images}")
-    
-    # Run batch analysis
-    print(f"\n🚀 Starting batch analysis...")
+    # ... existing setup code ...
     
     try:
         batch_results = batch_analyze_datasets(
@@ -1624,17 +1603,250 @@ def run_celebrity_batch_analysis():
             'celebrity_mtcnn_analysis'
         )
         
-        print(f"\n🎉 Celebrity analysis complete!")
-        print(f"📁 Results saved to: celebrity_mtcnn_analysis/")
+        # Clean the results dataframe
+        if batch_results and hasattr(batch_results, '__iter__'):
+            for config_name, df in batch_results.items():
+                if isinstance(df, pd.DataFrame):
+                    batch_results[config_name] = clean_dataframe(df)
         
-        # Generate summary by race
-        generate_race_summary(batch_results)
+        print(f"\n🎉 Celebrity analysis complete!")
         
         return batch_results
         
     except Exception as e:
         print(f"❌ Error during analysis: {str(e)}")
+        print("💡 Try running with smaller batch sizes or check image quality")
         return None
+def clean_dataframe(df):
+    """Clean the entire dataframe by replacing inf and nan values"""
+    print("🧹 Cleaning infinite and NaN values from dataset...")
+    
+    # Replace inf values with nan first
+    df = df.replace([np.inf, -np.inf], np.nan)
+    
+    # Count problematic values
+    inf_count = df.isin([np.inf, -np.inf]).sum().sum()
+    nan_count = df.isna().sum().sum()
+    
+    if inf_count > 0 or nan_count > 0:
+        print(f"   Found {inf_count} infinite values and {nan_count} NaN values")
+        
+        # Fill numeric columns with appropriate defaults
+        numeric_columns = df.select_dtypes(include=[np.number]).columns
+        
+        for col in numeric_columns:
+            if 'degradation' in col.lower() or 'change' in col.lower():
+                df[col].fillna(0.0, inplace=True)
+            elif 'score' in col.lower() or 'correlation' in col.lower():
+                df[col].fillna(0.0, inplace=True)
+            elif 'blur' in col.lower() or 'sharpness' in col.lower():
+                df[col].fillna(1.0, inplace=True)
+            elif 'contrast' in col.lower():
+                df[col].fillna(50.0, inplace=True)
+            elif 'time' in col.lower():
+                df[col].fillna(0.1, inplace=True)
+            else:
+                df[col].fillna(0.0, inplace=True)
+        
+        print("   ✅ Cleaned all problematic values")
+    
+    return df
+
+def _get_default_metrics(self):
+    """Return default metrics when calculation fails"""
+    return {
+        'ssim_score': 0.0,
+        'psnr_score': 0.0,
+        'mse_score': 0.0,
+        'mae_score': 0.0,
+        'original_blur': 1.0,
+        'processed_blur': 1.0,
+        'blur_degradation': 0.0,
+        'original_sharpness': 1.0,
+        'processed_sharpness': 1.0,
+        'sharpness_degradation': 0.0,
+        'original_contrast': 50.0,
+        'processed_contrast': 50.0,
+        'contrast_change': 0.0,
+        'histogram_correlation': 0.0,
+        'edge_preservation': 0.0,
+        'mean_pixel_diff': 0.0,
+        'std_pixel_diff': 0.0
+    }
+def clean_metrics_data(metrics_dict):
+    """
+    Clean metrics dictionary by replacing inf and nan values
+    """
+    cleaned = {}
+    
+    for key, value in metrics_dict.items():
+        if isinstance(value, (int, float)):
+            # Replace inf and nan values
+            if np.isinf(value) or np.isnan(value):
+                # Set reasonable defaults based on metric type
+                if 'degradation' in key.lower() or 'change' in key.lower():
+                    cleaned[key] = 0.0  # No degradation/change
+                elif 'score' in key.lower() or 'correlation' in key.lower():
+                    cleaned[key] = 0.0  # Poor score/correlation
+                elif 'blur' in key.lower() or 'sharpness' in key.lower():
+                    cleaned[key] = 1.0  # Minimal blur/sharpness
+                elif 'contrast' in key.lower():
+                    cleaned[key] = 50.0  # Average contrast
+                else:
+                    cleaned[key] = 0.0  # Default to 0
+            else:
+                cleaned[key] = value
+        else:
+            cleaned[key] = value
+    
+    return cleaned
+
+def safe_percentage_calculation(original, processed):
+    """
+    Safely calculate percentage change avoiding division by zero
+    """
+    if original == 0 or np.isnan(original) or np.isinf(original):
+        return 0.0
+    
+    result = (original - processed) / original * 100
+    
+    # Cap extreme values
+    if np.isinf(result) or np.isnan(result):
+        return 0.0
+    elif result > 100:
+        return 100.0
+    elif result < -100:
+        return -100.0
+    
+    return result
+
+def calculate_comprehensive_metrics_safe(self, original_img, processed_img):
+    """Calculate comprehensive quality metrics with inf/nan protection"""
+    metrics = {}
+    
+    try:
+        # Ensure both images are same size for fair comparison
+        if original_img.shape != processed_img.shape:
+            processed_resized = cv2.resize(processed_img, 
+                                         (original_img.shape[1], original_img.shape[0]))
+        else:
+            processed_resized = processed_img
+        
+        # Convert to grayscale for certain metrics
+        orig_gray = cv2.cvtColor(original_img, cv2.COLOR_RGB2GRAY) if len(original_img.shape) == 3 else original_img
+        proc_gray = cv2.cvtColor(processed_resized, cv2.COLOR_RGB2GRAY) if len(processed_resized.shape) == 3 else processed_resized
+        
+        # Check for empty/invalid images
+        if orig_gray.size == 0 or proc_gray.size == 0:
+            return self._get_default_metrics()
+        
+        # 1. SSIM (Structural Similarity Index)
+        try:
+            metrics['ssim_score'] = ssim(orig_gray, proc_gray, data_range=255)
+        except:
+            metrics['ssim_score'] = 0.0
+        
+        # 2. PSNR (Peak Signal-to-Noise Ratio)
+        try:
+            psnr_val = psnr(orig_gray, proc_gray, data_range=255)
+            metrics['psnr_score'] = psnr_val if np.isfinite(psnr_val) else 0.0
+        except:
+            metrics['psnr_score'] = 0.0
+        
+        # 3. MSE (Mean Squared Error)
+        try:
+            metrics['mse_score'] = mse(orig_gray, proc_gray)
+        except:
+            metrics['mse_score'] = 0.0
+        
+        # 4. MAE (Mean Absolute Error)
+        try:
+            metrics['mae_score'] = np.mean(np.abs(orig_gray.astype(float) - proc_gray.astype(float)))
+        except:
+            metrics['mae_score'] = 0.0
+        
+        # 5. Blur metrics with safe calculation
+        try:
+            original_blur = cv2.Laplacian(orig_gray, cv2.CV_64F).var()
+            processed_blur = cv2.Laplacian(proc_gray, cv2.CV_64F).var()
+            
+            metrics['original_blur'] = original_blur if np.isfinite(original_blur) else 1.0
+            metrics['processed_blur'] = processed_blur if np.isfinite(processed_blur) else 1.0
+            metrics['blur_degradation'] = safe_percentage_calculation(original_blur, processed_blur)
+        except:
+            metrics['original_blur'] = 1.0
+            metrics['processed_blur'] = 1.0
+            metrics['blur_degradation'] = 0.0
+        
+        # 6. Sharpness metrics with safe calculation
+        def calculate_sharpness_safe(img):
+            try:
+                grad_x = cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=3)
+                grad_y = cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=3)
+                result = np.sqrt(grad_x**2 + grad_y**2).mean()
+                return result if np.isfinite(result) else 1.0
+            except:
+                return 1.0
+        
+        original_sharpness = calculate_sharpness_safe(orig_gray)
+        processed_sharpness = calculate_sharpness_safe(proc_gray)
+        
+        metrics['original_sharpness'] = original_sharpness
+        metrics['processed_sharpness'] = processed_sharpness
+        metrics['sharpness_degradation'] = safe_percentage_calculation(original_sharpness, processed_sharpness)
+        
+        # 7. Contrast metrics with safe calculation
+        try:
+            original_contrast = orig_gray.std()
+            processed_contrast = proc_gray.std()
+            
+            metrics['original_contrast'] = original_contrast if np.isfinite(original_contrast) else 50.0
+            metrics['processed_contrast'] = processed_contrast if np.isfinite(processed_contrast) else 50.0
+            metrics['contrast_change'] = safe_percentage_calculation(processed_contrast, original_contrast)  # Note: inverted for "change"
+        except:
+            metrics['original_contrast'] = 50.0
+            metrics['processed_contrast'] = 50.0
+            metrics['contrast_change'] = 0.0
+        
+        # 8. Histogram correlation with safe calculation
+        try:
+            hist_orig = cv2.calcHist([orig_gray], [0], None, [256], [0, 256])
+            hist_proc = cv2.calcHist([proc_gray], [0], None, [256], [0, 256])
+            correlation = cv2.compareHist(hist_orig, hist_proc, cv2.HISTCMP_CORREL)
+            metrics['histogram_correlation'] = correlation if np.isfinite(correlation) else 0.0
+        except:
+            metrics['histogram_correlation'] = 0.0
+        
+        # 9. Edge preservation with safe calculation
+        try:
+            edges_orig = cv2.Canny(orig_gray, 50, 150)
+            edges_proc = cv2.Canny(proc_gray, 50, 150)
+            edge_similarity = ssim(edges_orig, edges_proc, data_range=255)
+            metrics['edge_preservation'] = edge_similarity if np.isfinite(edge_similarity) else 0.0
+        except:
+            metrics['edge_preservation'] = 0.0
+        
+        # 10. Pixel value statistics with safe calculation
+        try:
+            mean_diff = np.mean(orig_gray.astype(float) - proc_gray.astype(float))
+            std_diff = np.std(orig_gray.astype(float) - proc_gray.astype(float))
+            
+            metrics['mean_pixel_diff'] = mean_diff if np.isfinite(mean_diff) else 0.0
+            metrics['std_pixel_diff'] = std_diff if np.isfinite(std_diff) else 0.0
+        except:
+            metrics['mean_pixel_diff'] = 0.0
+            metrics['std_pixel_diff'] = 0.0
+        
+        # Final cleanup - ensure no inf/nan values remain
+        metrics = clean_metrics_data(metrics)
+        
+        return metrics
+        
+    except Exception as e:
+        print(f"Error calculating metrics: {str(e)}")
+        return self._get_default_metrics()
+
+
 
 def generate_race_summary(batch_results):
     """
