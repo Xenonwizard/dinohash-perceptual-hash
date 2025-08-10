@@ -1,0 +1,35 @@
+INDIVIDUAL IMAGE ANALYSIS REPORT
+================================================================================
+
+TOP 10 BEST QUALITY RESULTS:
+----------------------------------------
+Image ID        SSIM     PSNR     Confidence   Notes               
+----------------------------------------------------------------------
+img_0000        1.000    0.0      1.000        Standard            
+img_0001        1.000    0.0      0.999        Standard            
+img_0002        1.000    0.0      1.000        Standard            
+img_0003        1.000    0.0      1.000        Standard            
+img_0004        1.000    0.0      1.000        Standard            
+img_0005        1.000    0.0      1.000        Standard            
+img_0006        1.000    0.0      0.999        Standard            
+img_0007        1.000    0.0      1.000        Standard            
+img_0008        1.000    0.0      1.000        Standard            
+img_0009        1.000    0.0      1.000        Standard            
+
+BOTTOM 10 WORST QUALITY RESULTS:
+----------------------------------------
+Image ID        SSIM     PSNR     Confidence   Issues                        
+--------------------------------------------------------------------------------
+img_0000        1.000    0.0      1.000        Unknown cause                 
+img_0001        1.000    0.0      0.999        Unknown cause                 
+img_0002        1.000    0.0      1.000        Unknown cause                 
+img_0003        1.000    0.0      1.000        Unknown cause                 
+img_0004        1.000    0.0      1.000        Unknown cause                 
+img_0005        1.000    0.0      1.000        Unknown cause                 
+img_0006        1.000    0.0      0.999        Unknown cause                 
+img_0007        1.000    0.0      1.000        Unknown cause                 
+img_0008        1.000    0.0      1.000        Unknown cause                 
+img_0009        1.000    0.0      1.000        Unknown cause                 
+
+STATISTICAL OUTLIERS:
+----------------------------------------

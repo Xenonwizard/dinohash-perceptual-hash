@@ -1,0 +1,128 @@
+CROSS-DATASET MTCNN ANALYSIS REPORT
+================================================================================
+
+DATASET COMPARISON SUMMARY:
+----------------------------------------
+Dataset              Images   Avg SSIM   Avg Conf.  Notes                         
+--------------------------------------------------------------------------------
+caucasian_henrygolding 93       1.000      0.999      High quality; High confidence 
+caucasian_urassayasperbund 79       1.000      0.999      High quality; High confidence 
+chinese_gongli       74       1.000      0.999      High quality; High confidence 
+chinese_yangmi       106      1.000      0.996      High quality; High confidence 
+chinese_ronnychieng  76       1.000      0.998      High quality; High confidence 
+indian_irrfankhan    87       1.000      0.998      High quality; High confidence 
+indian_priyankachopra 89       1.000      1.000      High quality; High confidence 
+malay_sitinurhaliza  89       1.000      0.997      High quality; High confidence 
+malay_aaronaziz      85       1.000      1.000      High quality; High confidence 
+
+
+DETAILED ANALYSIS BY DATASET:
+----------------------------------------
+
+CAUCASIAN_HENRYGOLDING:
+  Total images: 93
+  Quality metrics:
+    SSIM: 1.000 ± 0.000
+    PSNR: 0.0 ± 0.0 dB
+  Detection performance:
+    Confidence: 0.999 ± 0.003
+    Processing time: 0.446s per image
+  Quality issues:
+    Poor quality (SSIM<0.75): 0/93 (0.0%)
+    Low confidence (<0.7): 0/93 (0.0%)
+
+CAUCASIAN_URASSAYASPERBUND:
+  Total images: 79
+  Quality metrics:
+    SSIM: 1.000 ± 0.000
+    PSNR: 0.0 ± 0.0 dB
+  Detection performance:
+    Confidence: 0.999 ± 0.002
+    Processing time: 0.458s per image
+  Quality issues:
+    Poor quality (SSIM<0.75): 0/79 (0.0%)
+    Low confidence (<0.7): 0/79 (0.0%)
+
+CHINESE_GONGLI:
+  Total images: 74
+  Quality metrics:
+    SSIM: 1.000 ± 0.000
+    PSNR: 0.0 ± 0.0 dB
+  Detection performance:
+    Confidence: 0.999 ± 0.003
+    Processing time: 0.446s per image
+  Quality issues:
+    Poor quality (SSIM<0.75): 0/74 (0.0%)
+    Low confidence (<0.7): 0/74 (0.0%)
+
+CHINESE_YANGMI:
+  Total images: 106
+  Quality metrics:
+    SSIM: 1.000 ± 0.000
+    PSNR: 0.0 ± 0.0 dB
+  Detection performance:
+    Confidence: 0.996 ± 0.012
+    Processing time: 0.447s per image
+  Quality issues:
+    Poor quality (SSIM<0.75): 0/106 (0.0%)
+    Low confidence (<0.7): 0/106 (0.0%)
+
+CHINESE_RONNYCHIENG:
+  Total images: 76
+  Quality metrics:
+    SSIM: 1.000 ± 0.000
+    PSNR: 0.0 ± 0.0 dB
+  Detection performance:
+    Confidence: 0.998 ± 0.008
+    Processing time: 0.472s per image
+  Quality issues:
+    Poor quality (SSIM<0.75): 0/76 (0.0%)
+    Low confidence (<0.7): 0/76 (0.0%)
+
+INDIAN_IRRFANKHAN:
+  Total images: 87
+  Quality metrics:
+    SSIM: 1.000 ± 0.000
+    PSNR: 0.0 ± 0.0 dB
+  Detection performance:
+    Confidence: 0.998 ± 0.017
+    Processing time: 0.454s per image
+  Quality issues:
+    Poor quality (SSIM<0.75): 0/87 (0.0%)
+    Low confidence (<0.7): 0/87 (0.0%)
+
+INDIAN_PRIYANKACHOPRA:
+  Total images: 89
+  Quality metrics:
+    SSIM: 1.000 ± 0.000
+    PSNR: 0.0 ± 0.0 dB
+  Detection performance:
+    Confidence: 1.000 ± 0.001
+    Processing time: 0.533s per image
+  Quality issues:
+    Poor quality (SSIM<0.75): 0/89 (0.0%)
+    Low confidence (<0.7): 0/89 (0.0%)
+
+MALAY_SITINURHALIZA:
+  Total images: 89
+  Quality metrics:
+    SSIM: 1.000 ± 0.000
+    PSNR: 0.0 ± 0.0 dB
+  Detection performance:
+    Confidence: 0.997 ± 0.007
+    Processing time: 0.473s per image
+  Quality issues:
+    Poor quality (SSIM<0.75): 0/89 (0.0%)
+    Low confidence (<0.7): 0/89 (0.0%)
+
+MALAY_AARONAZIZ:
+  Total images: 85
+  Quality metrics:
+    SSIM: 1.000 ± 0.000
+    PSNR: 0.0 ± 0.0 dB
+  Detection performance:
+    Confidence: 1.000 ± 0.001
+    Processing time: 0.463s per image
+  Quality issues:
+    Poor quality (SSIM<0.75): 0/85 (0.0%)
+    Low confidence (<0.7): 0/85 (0.0%)

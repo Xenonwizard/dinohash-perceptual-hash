@@ -1,0 +1,102 @@
+{
+  "dataset_info": {
+    "total_images": 106,
+    "successful_detections": 106,
+    "analysis_timestamp": "2025-08-10T03:22:32.672278"
+  },
+  "quality_metrics": {
+    "overall_ssim": {
+      "mean": 1.0,
+      "std": 0.0,
+      "median": 1.0,
+      "min": 1.0,
+      "max": 1.0
+    },
+    "overall_psnr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "median": 0.0
+    },
+    "degradation_metrics": {
+      "blur_degradation_percent": 0.0,
+      "sharpness_degradation_percent": 0.0,
+      "contrast_change_percent": 0.0
+    }
+  },
+  "quality_distribution": {
+    "Excellent": 106
+  },
+  "detection_performance": {
+    "average_confidence": 0.996402624080766,
+    "low_confidence_count": 0,
+    "average_detection_time": 0.44694497675265904
+  },
+  "processing_efficiency": {
+    "average_size_reduction_ratio": 0.4570176090805075,
+    "total_processing_time": 47.37616753578186
+  },
+  "problem_cases": {
+    "poor_quality_count": 0,
+    "low_confidence_count": 0,
+    "high_degradation_count": 0
+  },
+  "correlations": {
+    "confidence_quality": NaN,
+    "time_quality": NaN,
+    "size_quality": NaN
+  },
+  "best_images": [
+    {
+      "image_id": "img_0000",
+      "ssim_score": 1.0,
+      "face_confidence": 0.9998069405555725
+    },
+    {
+      "image_id": "img_0001",
+      "ssim_score": 1.0,
+      "face_confidence": 0.9988411068916321
+    },
+    {
+      "image_id": "img_0002",
+      "ssim_score": 1.0,
+      "face_confidence": 0.9998065829277039
+    },
+    {
+      "image_id": "img_0003",
+      "ssim_score": 1.0,
+      "face_confidence": 1.0
+    },
+    {
+      "image_id": "img_0004",
+      "ssim_score": 1.0,
+      "face_confidence": 0.999834418296814
+    }
+  ],
+  "worst_images": [
+    {
+      "image_id": "img_0000",
+      "ssim_score": 1.0,
+      "face_confidence": 0.9998069405555725
+    },
+    {
+      "image_id": "img_0001",
+      "ssim_score": 1.0,
+      "face_confidence": 0.9988411068916321
+    },
+    {
+      "image_id": "img_0002",
+      "ssim_score": 1.0,
+      "face_confidence": 0.9998065829277039
+    },
+    {
+      "image_id": "img_0003",
+      "ssim_score": 1.0,
+      "face_confidence": 1.0
+    },
+    {
+      "image_id": "img_0004",
+      "ssim_score": 1.0,
+      "face_confidence": 0.999834418296814
+    }
+  ]
+}

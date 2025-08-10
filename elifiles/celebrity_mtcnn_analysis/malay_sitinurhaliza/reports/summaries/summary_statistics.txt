@@ -1,0 +1,75 @@
+MTCNN VS ORIGINAL IMAGE QUALITY ANALYSIS - SUMMARY STATISTICS
+================================================================================
+
+DATASET OVERVIEW:
+----------------------------------------
+Total images processed: 89
+Successful face detections: 89 (100%)
+Average face confidence: 0.997 (±0.007)
+Average detection time: 0.473 seconds
+
+QUALITY METRICS SUMMARY:
+----------------------------------------
+SSIM (Structural Similarity):
+  Mean: 1.0000 (±0.0000)
+  Median: 1.0000
+  Range: [1.0000, 1.0000]
+  Interpretation: higher is better
+
+PSNR (Peak Signal-to-Noise Ratio):
+  Mean: 0.0000 (±0.0000)
+  Median: 0.0000
+  Range: [0.0000, 0.0000]
+  Interpretation: higher is better
+
+MSE (Mean Squared Error):
+  Mean: 0.0000 (±0.0000)
+  Median: 0.0000
+  Range: [0.0000, 0.0000]
+  Interpretation: lower is better
+
+MAE (Mean Absolute Error):
+  Mean: 0.0000 (±0.0000)
+  Median: 0.0000
+  Range: [0.0000, 0.0000]
+  Interpretation: lower is better
+
+Blur Degradation (%):
+  Mean: 0.0000 (±0.0000)
+  Median: 0.0000
+  Range: [0.0000, 0.0000]
+  Interpretation: lower is better
+
+Sharpness Degradation (%):
+  Mean: 0.0000 (±0.0000)
+  Median: 0.0000
+  Range: [0.0000, 0.0000]
+  Interpretation: lower is better
+
+Contrast Change (%):
+  Mean: 0.0000 (±0.0000)
+  Median: 0.0000
+  Range: [0.0000, 0.0000]
+  Interpretation: closer to 0 is better
+
+Histogram Correlation:
+  Mean: 1.0000 (±0.0000)
+  Median: 1.0000
+  Range: [1.0000, 1.0000]
+  Interpretation: higher is better
+
+Edge Preservation:
+  Mean: 1.0000 (±0.0000)
+  Median: 1.0000
+  Range: [1.0000, 1.0000]
+  Interpretation: higher is better
+
+QUALITY CATEGORY DISTRIBUTION:
+----------------------------------------
+Excellent: 89 images (100.0%)
+
+PROCESSING EFFICIENCY:
+----------------------------------------
+Average size reduction: 57.0%
+Average processing time per image: 0.473 seconds
+Total processing time: 42.09 seconds
