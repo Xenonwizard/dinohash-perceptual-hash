@@ -1596,6 +1596,7 @@ def run_celebrity_batch_analysis():
     print("=" * 60)
     
     # ... existing setup code ...
+    dataset_configs = setup_celebrity_analysis()
     
     try:
         batch_results = batch_analyze_datasets(
