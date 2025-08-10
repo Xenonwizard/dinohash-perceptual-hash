@@ -570,7 +570,7 @@ def main():
     np.random.seed(42)
     
     # Initialize the scientific analyzer
-    analyzer = ScientificMTCNNQualityAnalyzer('scientific_mtcnn_results')
+    analyzer = ScientificFaceQualityAssessment('scientific_mtcnn_results')
     
     # Step 1: Run the analysis on celebrity dataset
     print("\n📊 Step 1: Running Quality Analysis...")
@@ -686,7 +686,7 @@ def simple_main():
     print("🚀 Quick MTCNN Scientific Analysis")
     
     # Initialize
-    analyzer = ScientificMTCNNQualityAnalyzer()
+    analyzer = ScientificFaceQualityAssessment()
     
     # Run analysis
     summaries = analyzer.analyze_dataset('./images/celeb-dataset')
