@@ -12,6 +12,25 @@ from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import mean_squared_error as mse
 import time
 
+def safe_percentage_calculation(original, processed):
+        """
+        Safely calculate percentage change avoiding division by zero
+        """
+        if original == 0 or np.isnan(original) or np.isinf(original):
+            return 0.0
+        
+        result = (original - processed) / original * 100
+        
+        # Cap extreme values
+        if np.isinf(result) or np.isnan(result):
+            return 0.0
+        elif result > 100:
+            return 100.0
+        elif result < -100:
+            return -100.0
+        
+        return result
+
 class MTCNNOriginalComparator:
     def __init__(self, output_dir='mtcnn_analysis_results'):
         """Initialize comparator with output directory structure"""
@@ -91,6 +110,7 @@ class MTCNNOriginalComparator:
         except Exception as e:
             print(f"Error in face detection: {str(e)}")
             return None, None, 0, 0
+    
 
     # def calculate_comprehensive_metrics(self, original_img, processed_img):
     #     """Calculate comprehensive quality metrics between original and processed images"""
@@ -378,24 +398,7 @@ class MTCNNOriginalComparator:
         
         return cleaned
 
-    def safe_percentage_calculation(original, processed):
-        """
-        Safely calculate percentage change avoiding division by zero
-        """
-        if original == 0 or np.isnan(original) or np.isinf(original):
-            return 0.0
-        
-        result = (original - processed) / original * 100
-        
-        # Cap extreme values
-        if np.isinf(result) or np.isnan(result):
-            return 0.0
-        elif result > 100:
-            return 100.0
-        elif result < -100:
-            return -100.0
-        
-        return result
+    
 
 
 
