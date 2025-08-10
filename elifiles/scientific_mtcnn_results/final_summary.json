@@ -1,0 +1,158 @@
+{
+  "overall_statistics": {
+    "total_celebrities": 9,
+    "total_images_processed": "180",
+    "overall_success_rate": 1.0,
+    "overall_scientific_quality_score": 0.8971041353691407,
+    "best_celebrity": "gongli",
+    "worst_celebrity": "priyankachopra",
+    "by_race": {
+      "scientific_quality_score": {
+        "caucasian": 0.896,
+        "chinese": 0.902,
+        "indian": 0.889,
+        "malay": 0.899
+      },
+      "avg_perceptual_fidelity": {
+        "caucasian": 0.833,
+        "chinese": 0.811,
+        "indian": 0.802,
+        "malay": 0.804
+      },
+      "success_rate": {
+        "caucasian": 1.0,
+        "chinese": 1.0,
+        "indian": 1.0,
+        "malay": 1.0
+      }
+    }
+  },
+  "celebrity_summaries": [
+    {
+      "celebrity": "henrygolding",
+      "total_images": 20,
+      "successful_images": 20,
+      "success_rate": 1.0,
+      "avg_confidence": 0.9985156059265137,
+      "scientific_quality_score": 0.8934134290183515,
+      "quality_grade": "B",
+      "avg_perceptual_fidelity": 0.8131488434951752,
+      "avg_identity_preservation": 0.9892091920579442,
+      "avg_structural_integrity": 0.9097363435816572,
+      "avg_technical_quality": 0.8673420497421696,
+      "race": "caucasian"
+    },
+    {
+      "celebrity": "urassayasperbund",
+      "total_images": 20,
+      "successful_images": 20,
+      "success_rate": 1.0,
+      "avg_confidence": 0.9985500752925873,
+      "scientific_quality_score": 0.8988230873065615,
+      "quality_grade": "B",
+      "avg_perceptual_fidelity": 0.8527924172461464,
+      "avg_identity_preservation": 0.9846870807781072,
+      "avg_structural_integrity": 0.8736301249850745,
+      "avg_technical_quality": 0.8680906135997537,
+      "race": "caucasian"
+    },
+    {
+      "celebrity": "gongli",
+      "total_images": 20,
+      "successful_images": 20,
+      "success_rate": 1.0,
+      "avg_confidence": 0.9986659348011017,
+      "scientific_quality_score": 0.9066105018813062,
+      "quality_grade": "A",
+      "avg_perceptual_fidelity": 0.8341489309301979,
+      "avg_identity_preservation": 0.9953777775635719,
+      "avg_structural_integrity": 0.9268986879426226,
+      "avg_technical_quality": 0.8711020346542735,
+      "race": "chinese"
+    },
+    {
+      "celebrity": "yangmi",
+      "total_images": 20,
+      "successful_images": 20,
+      "success_rate": 1.0,
+      "avg_confidence": 0.9981813341379165,
+      "scientific_quality_score": 0.9009819690926163,
+      "quality_grade": "A",
+      "avg_perceptual_fidelity": 0.7890172951091116,
+      "avg_identity_preservation": 0.9966131592071574,
+      "avg_structural_integrity": 0.954697269200649,
+      "avg_technical_quality": 0.8993500946810012,
+      "race": "chinese"
+    },
+    {
+      "celebrity": "ronnychieng",
+      "total_images": 20,
+      "successful_images": 20,
+      "success_rate": 1.0,
+      "avg_confidence": 0.999551385641098,
+      "scientific_quality_score": 0.8979859540867204,
+      "quality_grade": "B",
+      "avg_perceptual_fidelity": 0.810863882715777,
+      "avg_identity_preservation": 0.9896545027761168,
+      "avg_structural_integrity": 0.9176362013785431,
+      "avg_technical_quality": 0.8917333601843653,
+      "race": "chinese"
+    },
+    {
+      "celebrity": "irrfankhan",
+      "total_images": 20,
+      "successful_images": 20,
+      "success_rate": 1.0,
+      "avg_confidence": 0.9912810027599335,
+      "scientific_quality_score": 0.8978936685961638,
+      "quality_grade": "B",
+      "avg_perceptual_fidelity": 0.8278066813039564,
+      "avg_identity_preservation": 0.993236408844219,
+      "avg_structural_integrity": 0.9049118543630715,
+      "avg_technical_quality": 0.8613869107593282,
+      "race": "indian"
+    },
+    {
+      "celebrity": "priyankachopra",
+      "total_images": 20,
+      "successful_images": 20,
+      "success_rate": 1.0,
+      "avg_confidence": 0.9992951571941375,
+      "scientific_quality_score": 0.8804430841608786,
+      "quality_grade": "B",
+      "avg_perceptual_fidelity": 0.7771011023854887,
+      "avg_identity_preservation": 0.9863977793956519,
+      "avg_structural_integrity": 0.911363588505669,
+      "avg_technical_quality": 0.8684376453741885,
+      "race": "indian"
+    },
+    {
+      "celebrity": "sitinurhaliza",
+      "total_images": 20,
+      "successful_images": 20,
+      "success_rate": 1.0,
+      "avg_confidence": 0.9994244873523712,
+      "scientific_quality_score": 0.8955982405103763,
+      "quality_grade": "B",
+      "avg_perceptual_fidelity": 0.8096508109759943,
+      "avg_identity_preservation": 0.9911319318220679,
+      "avg_structural_integrity": 0.9238832926944394,
+      "avg_technical_quality": 0.8673614572217992,
+      "race": "malay"
+    },
+    {
+      "celebrity": "aaronaziz",
+      "total_images": 20,
+      "successful_images": 20,
+      "success_rate": 1.0,
+      "avg_confidence": 0.9994901716709137,
+      "scientific_quality_score": 0.9021872836692916,
+      "quality_grade": "A",
+      "avg_perceptual_fidelity": 0.798294651766437,
+      "avg_identity_preservation": 0.9964948820393815,
+      "avg_structural_integrity": 0.9414192608632257,
+      "avg_technical_quality": 0.9036789251105277,
+      "race": "malay"
+    }
+  ]
+}
