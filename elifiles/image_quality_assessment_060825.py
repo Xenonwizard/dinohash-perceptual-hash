@@ -12,24 +12,111 @@ from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import mean_squared_error as mse
 import time
 
+# STANDALONE HELPER FUNCTIONS (OUTSIDE CLASS)
 def safe_percentage_calculation(original, processed):
-        """
-        Safely calculate percentage change avoiding division by zero
-        """
-        if original == 0 or np.isnan(original) or np.isinf(original):
-            return 0.0
+    """Safely calculate percentage change avoiding division by zero"""
+    # Only return 0 if original is exactly 0 or invalid
+    if original == 0:
+        return 0.0
+    
+    if np.isnan(original) or np.isinf(original) or np.isnan(processed) or np.isinf(processed):
+        return 0.0
+    
+    # Use a small epsilon to avoid division by very small numbers
+    if abs(original) < 1e-10:
+        return 0.0
+    
+    result = (original - processed) / original * 100
+    
+    # Only catch truly infinite/nan results
+    if np.isinf(result) or np.isnan(result):
+        return 0.0
+    
+    # Allow large but finite values (don't cap at 100)
+    return float(result)
+
+def clean_metrics_data(metrics_dict):
+    """Clean metrics dictionary by replacing inf and nan values"""
+    cleaned = {}
+    
+    for key, value in metrics_dict.items():
+        if isinstance(value, (int, float)):
+            # Replace inf and nan values
+            if np.isinf(value) or np.isnan(value):
+                # Set reasonable defaults based on metric type
+                if 'degradation' in key.lower() or 'change' in key.lower():
+                    cleaned[key] = 0.0  # No degradation/change
+                elif 'score' in key.lower() or 'correlation' in key.lower():
+                    cleaned[key] = 0.0  # Poor score/correlation
+                elif 'blur' in key.lower() or 'sharpness' in key.lower():
+                    cleaned[key] = 1.0  # Minimal blur/sharpness
+                elif 'contrast' in key.lower():
+                    cleaned[key] = 50.0  # Average contrast
+                else:
+                    cleaned[key] = 0.0  # Default to 0
+            else:
+                cleaned[key] = value
+        else:
+            cleaned[key] = value
+    
+    return cleaned
+
+def clean_dataframe(df):
+    """Clean the entire dataframe by replacing inf and nan values"""
+    print("🧹 Cleaning infinite and NaN values from dataset...")
+    
+    # Replace inf values with nan first
+    df = df.replace([np.inf, -np.inf], np.nan)
+    
+    # Count problematic values
+    inf_count = df.isin([np.inf, -np.inf]).sum().sum()
+    nan_count = df.isna().sum().sum()
+    
+    if inf_count > 0 or nan_count > 0:
+        print(f"   Found {inf_count} infinite values and {nan_count} NaN values")
         
-        result = (original - processed) / original * 100
+        # Fill numeric columns with appropriate defaults
+        numeric_columns = df.select_dtypes(include=[np.number]).columns
         
-        # Cap extreme values
-        if np.isinf(result) or np.isnan(result):
-            return 0.0
-        elif result > 100:
-            return 100.0
-        elif result < -100:
-            return -100.0
+        for col in numeric_columns:
+            if 'degradation' in col.lower() or 'change' in col.lower():
+                df[col].fillna(0.0, inplace=True)
+            elif 'score' in col.lower() or 'correlation' in col.lower():
+                df[col].fillna(0.0, inplace=True)
+            elif 'blur' in col.lower() or 'sharpness' in col.lower():
+                df[col].fillna(1.0, inplace=True)
+            elif 'contrast' in col.lower():
+                df[col].fillna(50.0, inplace=True)
+            elif 'time' in col.lower():
+                df[col].fillna(0.1, inplace=True)
+            else:
+                df[col].fillna(0.0, inplace=True)
         
-        return result
+        print("   ✅ Cleaned all problematic values")
+
+    return df
+
+def _get_default_metrics(self):
+    """Return default metrics when calculation fails"""
+    return {
+        'ssim_score': 0.0,
+        'psnr_score': 0.0,
+        'mse_score': 0.0,
+        'mae_score': 0.0,
+        'original_blur': 1.0,
+        'processed_blur': 1.0,
+        'blur_degradation': 0.0,
+        'original_sharpness': 1.0,
+        'processed_sharpness': 1.0,
+        'sharpness_degradation': 0.0,
+        'original_contrast': 50.0,
+        'processed_contrast': 50.0,
+        'contrast_change': 0.0,
+        'histogram_correlation': 0.0,
+        'edge_preservation': 0.0,
+        'mean_pixel_diff': 0.0,
+        'std_pixel_diff': 0.0
+    }
 
 class MTCNNOriginalComparator:
     def __init__(self, output_dir='mtcnn_analysis_results'):
@@ -314,92 +401,7 @@ class MTCNNOriginalComparator:
             print(f"Error calculating metrics: {str(e)}")
             return self._get_default_metrics()
 
-    def clean_dataframe(df):
-        """Clean the entire dataframe by replacing inf and nan values"""
-        print("🧹 Cleaning infinite and NaN values from dataset...")
-        
-        # Replace inf values with nan first
-        df = df.replace([np.inf, -np.inf], np.nan)
-        
-        # Count problematic values
-        inf_count = df.isin([np.inf, -np.inf]).sum().sum()
-        nan_count = df.isna().sum().sum()
-        
-        if inf_count > 0 or nan_count > 0:
-            print(f"   Found {inf_count} infinite values and {nan_count} NaN values")
-            
-            # Fill numeric columns with appropriate defaults
-            numeric_columns = df.select_dtypes(include=[np.number]).columns
-            
-            for col in numeric_columns:
-                if 'degradation' in col.lower() or 'change' in col.lower():
-                    df[col].fillna(0.0, inplace=True)
-                elif 'score' in col.lower() or 'correlation' in col.lower():
-                    df[col].fillna(0.0, inplace=True)
-                elif 'blur' in col.lower() or 'sharpness' in col.lower():
-                    df[col].fillna(1.0, inplace=True)
-                elif 'contrast' in col.lower():
-                    df[col].fillna(50.0, inplace=True)
-                elif 'time' in col.lower():
-                    df[col].fillna(0.1, inplace=True)
-                else:
-                    df[col].fillna(0.0, inplace=True)
-            
-            print("   ✅ Cleaned all problematic values")
     
-        return df
-
-    def _get_default_metrics(self):
-        """Return default metrics when calculation fails"""
-        return {
-            'ssim_score': 0.0,
-            'psnr_score': 0.0,
-            'mse_score': 0.0,
-            'mae_score': 0.0,
-            'original_blur': 1.0,
-            'processed_blur': 1.0,
-            'blur_degradation': 0.0,
-            'original_sharpness': 1.0,
-            'processed_sharpness': 1.0,
-            'sharpness_degradation': 0.0,
-            'original_contrast': 50.0,
-            'processed_contrast': 50.0,
-            'contrast_change': 0.0,
-            'histogram_correlation': 0.0,
-            'edge_preservation': 0.0,
-            'mean_pixel_diff': 0.0,
-            'std_pixel_diff': 0.0
-        }
-    def clean_metrics_data(metrics_dict):
-        """
-        Clean metrics dictionary by replacing inf and nan values
-        """
-        cleaned = {}
-        
-        for key, value in metrics_dict.items():
-            if isinstance(value, (int, float)):
-                # Replace inf and nan values
-                if np.isinf(value) or np.isnan(value):
-                    # Set reasonable defaults based on metric type
-                    if 'degradation' in key.lower() or 'change' in key.lower():
-                        cleaned[key] = 0.0  # No degradation/change
-                    elif 'score' in key.lower() or 'correlation' in key.lower():
-                        cleaned[key] = 0.0  # Poor score/correlation
-                    elif 'blur' in key.lower() or 'sharpness' in key.lower():
-                        cleaned[key] = 1.0  # Minimal blur/sharpness
-                    elif 'contrast' in key.lower():
-                        cleaned[key] = 50.0  # Average contrast
-                    else:
-                        cleaned[key] = 0.0  # Default to 0
-                else:
-                    cleaned[key] = value
-            else:
-                cleaned[key] = value
-        
-        return cleaned
-
-    
-
 
 
     def save_comparison_images(self, original, processed, image_id, face_box=None):
