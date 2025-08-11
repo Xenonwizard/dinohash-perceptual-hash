@@ -44,29 +44,43 @@ class SimpleFaceTester:
         self.detector = MTCNN()
         self.results = []
     
-    def _to_bits(self, hash_str):
-        """Convert hash string to bit array"""
-        return np.array([int(bit) for bit in str(imagehash.hex_to_hash(hash_str))])
-    
     def _hamming_dist(self, h1, h2):
-        """Hamming distance (normalized)"""
-        bits1, bits2 = self._to_bits(h1), self._to_bits(h2)
-        return np.sum(bits1 != bits2) / len(bits1)
+        """Hamming distance (normalized) - use ImageHash built-in"""
+        hash1 = imagehash.hex_to_hash(h1)
+        hash2 = imagehash.hex_to_hash(h2)
+        return (hash1 - hash2) / 64  # Normalized by 64 bits (8x8)
     
     def _euclidean_dist(self, h1, h2):
-        """Euclidean distance (normalized)"""
-        bits1, bits2 = self._to_bits(h1), self._to_bits(h2)
-        return euclidean(bits1, bits2) / len(bits1)**0.5
+        """Euclidean distance using hash difference"""
+        hash1 = imagehash.hex_to_hash(h1)
+        hash2 = imagehash.hex_to_hash(h2)
+        hamming_dist = hash1 - hash2
+        return hamming_dist / 64  # Normalize by max possible distance
     
     def _manhattan_dist(self, h1, h2):
-        """Manhattan distance (normalized)"""
-        bits1, bits2 = self._to_bits(h1), self._to_bits(h2)
-        return manhattan(bits1, bits2) / len(bits1)
+        """Manhattan distance - same as hamming for binary data"""
+        return self._hamming_dist(h1, h2)
     
     def _cosine_dist(self, h1, h2):
-        """Cosine distance"""
-        bits1, bits2 = self._to_bits(h1), self._to_bits(h2)
-        return cosine(bits1, bits2)
+        """Cosine distance using bit representation"""
+        try:
+            # Convert to bit arrays using string representation
+            bits1 = np.array([int(c, 16) for c in h1])
+            bits2 = np.array([int(c, 16) for c in h2])
+            
+            # Calculate cosine distance
+            dot_product = np.dot(bits1, bits2)
+            norm1 = np.linalg.norm(bits1)
+            norm2 = np.linalg.norm(bits2)
+            
+            if norm1 == 0 or norm2 == 0:
+                return 1.0
+            
+            cosine_sim = dot_product / (norm1 * norm2)
+            return 1 - cosine_sim  # Convert to distance
+        except:
+            # Fallback to hamming distance
+            return self._hamming_dist(h1, h2)
     
     def extract_face(self, img_path):
         """Extract and preprocess face"""
@@ -218,7 +232,7 @@ def main():
     """Main function - simplified workflow"""
     
     # Configuration
-    folder_path = "./images/ronnychieng/"  # Update this path
+    folder_path = "./elifiles/images/ronnychieng/"  # Update this path
     max_pairs = 20  # Limit for quick testing
     
     print("=== Simplified Face Recognition Tester ===")
