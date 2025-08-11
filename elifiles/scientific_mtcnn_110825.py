@@ -500,8 +500,53 @@ class DetailedFaceQualityAssessment:
             'metrics_info': self.metrics_info
         }
         
-        with open(output_file, 'w') as f:
-            json.dump(safe_data, f, indent=2, default=str)
+        try:
+            with open(output_file, 'w') as f:
+                json.dump(safe_data, f, indent=2)
+        except Exception as e:
+            print(f"JSON save error for {celebrity_name}: {e}")
+            # Debug: Print problematic data types
+            print("Debugging data types:")
+            for key, value in safe_data.items():
+                print(f"  {key}: {type(value)}")
+                if key == 'individual_results' and isinstance(value, list):
+                    for i, result in enumerate(value[:3]):  # Check first 3 results
+                        print(f"    Result {i}:")
+                        for k, v in result.items():
+                            print(f"      {k}: {type(v)} = {v}")
+            
+            # Save as pickle as fallback
+            import pickle
+            pickle_file = self.output_dir / f"{celebrity_name}_individual_metrics.pkl"
+            with open(pickle_file, 'wb') as f:
+                pickle.dump(safe_data, f)
+            print(f"Saved as pickle: {pickle_file}")
+            return summary
+    
+    def _create_race_analysis(self, df, metric_keys):
+        """Create race analysis with string keys for JSON compatibility"""
+        race_analysis = {}
+        
+        if 'race' not in df.columns:
+            return race_analysis
+        
+        for race in df['race'].unique():
+            race_data = df[df['race'] == race]
+            race_analysis[str(race)] = {}
+            
+            for metric in metric_keys:
+                if metric in race_data.columns:
+                    valid_data = race_data[metric].dropna()
+                    if len(valid_data) > 0:
+                        race_analysis[str(race)][f"{metric}_mean"] = float(valid_data.mean())
+                        race_analysis[str(race)][f"{metric}_std"] = float(valid_data.std())
+                        race_analysis[str(race)][f"{metric}_count"] = int(len(valid_data))
+                    else:
+                        race_analysis[str(race)][f"{metric}_mean"] = None
+                        race_analysis[str(race)][f"{metric}_std"] = None
+                        race_analysis[str(race)][f"{metric}_count"] = 0
+        
+        return race_analysis  # Continue despite JSON error
         
         # Print individual metric summary
         print(f"\n📊 {celebrity_name} Individual Metrics Summary:")
@@ -588,19 +633,69 @@ class DetailedFaceQualityAssessment:
             },
             'individual_metric_statistics': metric_stats,
             'best_performers_by_metric': best_performers,
-            'by_race_analysis': df.groupby('race').agg({
-                col: ['mean', 'std', 'count'] for col in metric_stats.keys()
-            }).round(3).to_dict() if 'race' in df.columns else {},
+            'by_race_analysis': self._create_race_analysis(df, metric_stats.keys()) if 'race' in df.columns else {},
             'metrics_info': self.metrics_info
         }
         
-        # Save comprehensive summary
+        # Save comprehensive summary with enhanced JSON safety
         summary_file = self.output_dir / 'individual_metrics_summary.json'
-        with open(summary_file, 'w') as f:
-            json.dump({
+        
+        def deep_json_safe(obj):
+            """Deep clean any object for JSON serialization"""
+            if obj is None:
+                return None
+            elif isinstance(obj, (str, int, float, bool)):
+                return obj
+            elif isinstance(obj, (np.floating, np.integer)):
+                return float(obj)
+            elif isinstance(obj, (tuple, list)):
+                if len(obj) == 0:
+                    return None
+                elif len(obj) == 1:
+                    return deep_json_safe(obj[0])
+                else:
+                    return [deep_json_safe(item) for item in obj]
+            elif isinstance(obj, np.ndarray):
+                if obj.size == 1:
+                    return float(obj.item())
+                else:
+                    return obj.tolist()
+            elif isinstance(obj, dict):
+                # Ensure all keys are strings
+                clean_dict = {}
+                for k, v in obj.items():
+                    # Convert any non-string keys to strings
+                    if isinstance(k, tuple):
+                        key_str = "_".join(str(x) for x in k)
+                    else:
+                        key_str = str(k)
+                    clean_dict[key_str] = deep_json_safe(v)
+                return clean_dict
+            elif pd.isna(obj):
+                return None
+            else:
+                try:
+                    return float(obj)
+                except:
+                    return str(obj)
+        
+        try:
+            safe_summary_data = deep_json_safe({
                 'summary_statistics': summary_data,
                 'celebrity_details': summaries
-            }, f, indent=2, default=str)
+            })
+            
+            with open(summary_file, 'w') as f:
+                json.dump(safe_summary_data, f, indent=2)
+                
+        except Exception as e:
+            print(f"JSON serialization error: {e}")
+            # Save as pickle as fallback
+            import pickle
+            pickle_file = self.output_dir / 'individual_metrics_summary.pkl'
+            with open(pickle_file, 'wb') as f:
+                pickle.dump({'summary_statistics': summary_data, 'celebrity_details': summaries}, f)
+            print(f"Saved as pickle instead: {pickle_file}")
         
         # Save CSV
         csv_file = self.output_dir / 'individual_metrics_data.csv'
