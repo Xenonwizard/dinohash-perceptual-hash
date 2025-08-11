@@ -564,32 +564,91 @@ class DetailedFaceQualityAssessment:
         """Analyze entire dataset showing individual metric performance"""
         base_path = Path(base_path)
         
+        print(f"🔍 Looking for dataset at: {base_path.absolute()}")
+        
         if not base_path.exists():
             print(f"❌ Dataset path not found: {base_path}")
+            print("Available paths in current directory:")
+            for item in Path('.').iterdir():
+                if item.is_dir():
+                    print(f"  📁 {item}")
             return []
         
-        races = ['caucasian', 'chinese', 'indian', 'malay']
+        print(f"✅ Dataset path exists: {base_path}")
+        print("Contents of dataset directory:")
+        for item in base_path.iterdir():
+            if item.is_dir():
+                print(f"  📁 {item.name}")
+            else:
+                print(f"  📄 {item.name}")
+        
+        # Try to auto-detect structure
         all_summaries = []
         
-        for race in races:
-            race_path = base_path / race
-            if not race_path.exists():
-                print(f"⚠️  Race folder not found: {race_path}")
-                continue
+        # Check if this has race subfolders
+        races = ['caucasian', 'chinese', 'indian', 'malay']
+        has_race_structure = any((base_path / race).exists() for race in races)
+        
+        if has_race_structure:
+            print("\n🔍 Detected race-based folder structure")
+            for race in races:
+                race_path = base_path / race
+                if not race_path.exists():
+                    print(f"⚠️  Race folder not found: {race}")
+                    continue
+                    
+                print(f"\n🌍 Processing {race.title()} celebrities...")
+                print(f"Contents of {race} folder:")
                 
-            print(f"\n🌍 Processing {race.title()} celebrities...")
-            
-            celebrity_folders = [d for d in race_path.iterdir() 
+                celebrity_folders = []
+                for item in race_path.iterdir():
+                    if item.is_dir() and not item.name.endswith('_test'):
+                        celebrity_folders.append(item)
+                        print(f"  📁 {item.name}")
+                
+                if not celebrity_folders:
+                    print(f"  ❌ No celebrity folders found in {race}")
+                    continue
+                
+                for celeb_folder in celebrity_folders:
+                    summary = self.analyze_celebrity_folder(celeb_folder)
+                    if summary:
+                        summary['race'] = race
+                        all_summaries.append(summary)
+        else:
+            print("\n🔍 No race structure detected, treating all subfolders as celebrities")
+            # Treat all subfolders as celebrity folders
+            celebrity_folders = [d for d in base_path.iterdir() 
                                if d.is_dir() and not d.name.endswith('_test')]
+            
+            if not celebrity_folders:
+                print("❌ No celebrity folders found in base directory")
+                print("Expected structure:")
+                print("  ./images/celeb-dataset/celebrity1/")
+                print("  ./images/celeb-dataset/celebrity2/")
+                print("  OR")
+                print("  ./images/celeb-dataset/caucasian/celebrity1/")
+                print("  ./images/celeb-dataset/chinese/celebrity2/")
+                return []
+            
+            print(f"Found {len(celebrity_folders)} potential celebrity folders:")
+            for folder in celebrity_folders:
+                print(f"  📁 {folder.name}")
             
             for celeb_folder in celebrity_folders:
                 summary = self.analyze_celebrity_folder(celeb_folder)
                 if summary:
-                    summary['race'] = race
+                    summary['race'] = 'unknown'  # No race info available
                     all_summaries.append(summary)
         
         if all_summaries:
             self.save_individual_metrics_summary(all_summaries)
+        else:
+            print("\n❌ No celebrities were successfully analyzed")
+            print("Possible issues:")
+            print("  - No image files found in celebrity folders")
+            print("  - MTCNN face detection failed on all images")
+            print("  - Folder structure doesn't match expected format")
         
         return all_summaries
     
@@ -704,17 +763,38 @@ class DetailedFaceQualityAssessment:
         # Print individual metric results
         print(f"\n🎉 Individual Metrics Analysis Complete!")
         print(f"📊 Total celebrities: {len(df)}")
-        print(f"\n📈 INDIVIDUAL METRIC PERFORMANCE:")
         
-        for metric, stats in metric_stats.items():
-            print(f"  {metric.upper()}: {stats['mean']:.3f} ± {stats['std']:.3f} (n={stats['count']})")
+        if metric_stats:
+            print(f"\n📈 INDIVIDUAL METRIC PERFORMANCE:")
+            
+            for metric, stats in metric_stats.items():
+                try:
+                    mean_val = stats['mean'] if stats['mean'] is not None else 0
+                    std_val = stats['std'] if stats['std'] is not None else 0
+                    count_val = stats['count'] if stats['count'] is not None else 0
+                    print(f"  {metric.upper()}: {mean_val:.3f} ± {std_val:.3f} (n={count_val})")
+                except Exception as e:
+                    print(f"  {metric.upper()}: Error displaying stats - {e}")
         
-        print(f"\n🏆 BEST PERFORMERS BY METRIC:")
-        for metric, best in best_performers.items():
-            print(f"  {metric.upper()}: {best['celebrity']} ({best['score']:.3f})")
+        if best_performers:
+            print(f"\n🏆 BEST PERFORMERS BY METRIC:")
+            for metric, best in best_performers.items():
+                try:
+                    celebrity_name = best['celebrity'] if best['celebrity'] is not None else 'Unknown'
+                    score_val = best['score'] if best['score'] is not None else 0
+                    print(f"  {metric.upper()}: {celebrity_name} ({score_val:.3f})")
+                except Exception as e:
+                    print(f"  {metric.upper()}: Error displaying best performer - {e}")
         
-        print(f"\n💾 Individual metrics summary: {summary_file}")
-        print(f"📊 CSV data: {csv_file}")
+        try:
+            print(f"\n💾 Individual metrics summary: {summary_file}")
+        except:
+            print(f"\n💾 Individual metrics summary: [file path error]")
+            
+        try:
+            print(f"📊 CSV data: {csv_file}")
+        except:
+            print(f"📊 CSV data: [file path error]")
 
 
 def main():
@@ -734,7 +814,28 @@ def main():
     # Run analysis
     print("\n📊 Running Individual Metrics Analysis...")
     try:
-        summaries = analyzer.analyze_dataset('./images/celeb-dataset')
+        # Try different common paths
+        possible_paths = [
+            './images/celeb-dataset',
+            './images',
+            './celebrity_mtcnn_analysis',
+            './sample_analysis_results'
+        ]
+        
+        dataset_path = None
+        for path in possible_paths:
+            if Path(path).exists():
+                print(f"🔍 Found dataset at: {path}")
+                dataset_path = path
+                break
+        
+        if dataset_path is None:
+            print("❌ No dataset found. Checked paths:")
+            for path in possible_paths:
+                print(f"  - {path}")
+            return None
+        
+        summaries = analyzer.analyze_dataset(dataset_path)
         if summaries:
             print(f"✅ Successfully analyzed {len(summaries)} celebrities")
         else:
