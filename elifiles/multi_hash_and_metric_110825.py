@@ -232,7 +232,7 @@ def main():
     """Main function - simplified workflow"""
     
     # Configuration
-    folder_path = "./elifiles/images/ronnychieng/"  # Update this path
+    folder_path = "./images/ronnychieng/"  # Update this path
     max_pairs = 20  # Limit for quick testing
     
     print("=== Simplified Face Recognition Tester ===")
