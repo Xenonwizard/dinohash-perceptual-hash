@@ -139,10 +139,10 @@ class DetailedFaceQualityAssessment:
         # 5. PEARSON CORRELATION - Raw correlation value
         try:
             if np.std(orig_gray) > 0 and np.std(proc_gray) > 0:
-                correlation, _ = pearsonr(orig_gray.ravel(), proc_gray.ravel())
-                metrics['pixel_correlation'] = correlation
+                correlation, p_value = pearsonr(orig_gray.ravel(), proc_gray.ravel())
+                metrics['pixel_correlation'] = float(correlation)  # Ensure float
             else:
-                metrics['pixel_correlation'] = 1.0 if np.array_equal(orig_gray, proc_gray) else 0
+                metrics['pixel_correlation'] = 1.0 if np.array_equal(orig_gray, proc_gray) else 0.0
         except Exception as e:
             metrics['pixel_correlation'] = None
             print(f"Correlation calculation failed: {e}")
@@ -150,7 +150,7 @@ class DetailedFaceQualityAssessment:
         # 6. VISUAL INFORMATION FIDELITY (VIF) - Full implementation
         try:
             vif_score = self._calculate_vif(orig_gray, proc_gray)
-            metrics['vif'] = vif_score
+            metrics['vif'] = float(vif_score) if vif_score is not None else None
         except Exception as e:
             metrics['vif'] = None
             print(f"VIF calculation failed: {e}")
@@ -158,7 +158,7 @@ class DetailedFaceQualityAssessment:
         # 7. FEATURE SIMILARITY INDEX (FSIM) - Full implementation
         try:
             fsim_score = self._calculate_fsim(orig_gray, proc_gray)
-            metrics['fsim'] = fsim_score
+            metrics['fsim'] = float(fsim_score) if fsim_score is not None else None
         except Exception as e:
             metrics['fsim'] = None
             print(f"FSIM calculation failed: {e}")
@@ -360,23 +360,38 @@ class DetailedFaceQualityAssessment:
         # Calculate individual metrics
         metrics = self.calculate_individual_metrics(face_region, processed_face)
         
+        # Helper function to ensure JSON serializable values
+        def make_json_safe(value):
+            if value is None:
+                return None
+            elif isinstance(value, (tuple, list)):
+                return float(value[0]) if len(value) > 0 else None
+            elif isinstance(value, np.ndarray):
+                return float(value.item()) if value.size == 1 else float(np.mean(value))
+            elif isinstance(value, (np.floating, np.integer)):
+                return float(value)
+            elif isinstance(value, (int, float)):
+                return float(value)
+            else:
+                return str(value)
+        
         # Compile results with individual scores
         result = {
             'image_path': str(image_path),
             'image_name': Path(image_path).name,
-            'face_confidence': confidence,
-            'detection_time': detection_time,
+            'face_confidence': float(confidence),
+            'detection_time': float(detection_time),
             'original_size': f"{face_region.shape[1]}x{face_region.shape[0]}",
             'processed_size': f"{target_size[0]}x{target_size[1]}",
             
-            # Individual metric scores (NO overall score)
-            'ssim': metrics.get('ssim'),
-            'psnr_db': metrics.get('psnr'),
-            'mae': metrics.get('mae'),
-            'lbp_similarity': metrics.get('lbp_similarity'),
-            'pixel_correlation': metrics.get('pixel_correlation'),
-            'vif': metrics.get('vif'),
-            'fsim': metrics.get('fsim'),
+            # Individual metric scores (NO overall score) - JSON safe
+            'ssim': make_json_safe(metrics.get('ssim')),
+            'psnr_db': make_json_safe(metrics.get('psnr')),
+            'mae': make_json_safe(metrics.get('mae')),
+            'lbp_similarity': make_json_safe(metrics.get('lbp_similarity')),
+            'pixel_correlation': make_json_safe(metrics.get('pixel_correlation')),
+            'vif': make_json_safe(metrics.get('vif')),
+            'fsim': make_json_safe(metrics.get('fsim')),
             
             # Metadata
             'metrics_info': self.metrics_info
@@ -456,14 +471,37 @@ class DetailedFaceQualityAssessment:
             'std_mae': df['mae'].std() if df['mae'].notna().any() else None,
         }
         
-        # Save detailed results
+        # Save detailed results with JSON safety
         output_file = self.output_dir / f"{celebrity_name}_individual_metrics.json"
+        
+        def json_safe_dump(obj):
+            """Recursively ensure all values are JSON serializable"""
+            if isinstance(obj, dict):
+                return {k: json_safe_dump(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [json_safe_dump(item) for item in obj]
+            elif isinstance(obj, (tuple, np.ndarray)):
+                if hasattr(obj, 'size') and obj.size == 1:
+                    return float(obj.item())
+                elif len(obj) > 0:
+                    return float(obj[0])
+                else:
+                    return None
+            elif isinstance(obj, (np.floating, np.integer)):
+                return float(obj)
+            elif pd.isna(obj):
+                return None
+            else:
+                return obj
+        
+        safe_data = {
+            'summary': json_safe_dump(summary),
+            'individual_results': json_safe_dump(results),
+            'metrics_info': self.metrics_info
+        }
+        
         with open(output_file, 'w') as f:
-            json.dump({
-                'summary': summary,
-                'individual_results': results,
-                'metrics_info': self.metrics_info
-            }, f, indent=2, default=str)
+            json.dump(safe_data, f, indent=2, default=str)
         
         # Print individual metric summary
         print(f"\n📊 {celebrity_name} Individual Metrics Summary:")
