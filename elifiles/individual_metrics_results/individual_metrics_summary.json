@@ -1,0 +1,90 @@
+{
+  "summary_statistics": {
+    "dataset_overview": {
+      "total_celebrities": 9,
+      "total_successful_images": "180",
+      "overall_success_rate": 1.0
+    },
+    "individual_metric_statistics": {
+      "avg_ssim": {
+        "mean": 0.9868060182081589,
+        "std": 0.007560763200708298,
+        "min": 0.9769157440644269,
+        "max": 0.996443913457885,
+        "count": 9
+      },
+      "avg_psnr_db": {
+        "mean": 39.5733292981794,
+        "std": 1.2732989697468946,
+        "min": 38.129721753346615,
+        "max": 41.60358208543753,
+        "count": 9
+      },
+      "avg_mae": {
+        "mean": 1.6377709147758255,
+        "std": 0.2864460377617021,
+        "min": 1.23368740984893,
+        "max": 2.060139310713871,
+        "count": 9
+      },
+      "avg_lbp_similarity": {
+        "mean": 0.994935456267179,
+        "std": 0.002715449207287692,
+        "min": 0.991088526941471,
+        "max": 0.99824511722178,
+        "count": 9
+      },
+      "avg_pixel_correlation": {
+        "mean": 0.9981630979480772,
+        "std": 0.0007564150838958203,
+        "min": 0.9968171708029263,
+        "max": 0.999239088119128,
+        "count": 9
+      },
+      "avg_vif": {
+        "mean": 1.8011776921942517,
+        "std": 2.856892250016162,
+        "min": 0.8371327774744252,
+        "max": 9.4195218811066,
+        "count": 9
+      },
+      "avg_fsim": {
+        "mean": 0.9816764968348392,
+        "std": 0.008731201999037144,
+        "min": 0.9695883740002594,
+        "max": 0.9927548438715579,
+        "count": 9
+      }
+    },
+    "best_performers_by_metric": {
+      "avg_ssim": {
+        "celebrity": "yangmi",
+        "score": 0.996443913457885
+      },
+      "avg_psnr_db": {
+        "celebrity": "aaronaziz",
+        "score": 41.60358208543753
+      },
+      "avg_mae": {
+        "celebrity": "aaronaziz",
+        "score": 1.23368740984893
+      },
+      "avg_lbp_similarity": {
+        "celebrity": "aaronaziz",
+        "score": 0.99824511722178
+      },
+      "avg_pixel_correlation": {
+        "celebrity": "yangmi",
+        "score": 0.999239088119128
+      },
+      "avg_vif": {
+        "celebrity": "priyankachopra",
+        "score": 9.4195218811066
+      },
+      "avg_fsim": {
+        "celebrity": "yangmi",
+        "score": 0.9927548438715579
+      }
+    },
+    "by_race_analysis": {
+      

@@ -129,12 +129,12 @@
   ],
   "scientific_report": {
     "status": "Scientific report generated",
-    "timestamp": 1754821067.772519
+    "timestamp": 1754822009.7155395
   },
   "validation_results": null,
   "bias_analysis": null,
   "metadata": {
-    "analysis_date": "2025-08-10 10:17:47",
+    "analysis_date": "2025-08-10 10:33:29",
     "total_celebrities": 9,
     "methodology": "Scientific face quality assessment based on peer-reviewed research"
   }
