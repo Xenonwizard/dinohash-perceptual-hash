@@ -661,7 +661,7 @@ def main():
     print("🔬 Scientific MTCNN Face Quality Assessment")
     print("=" * 60)
     
-    # Set random seed for reproducibility
+    # Set random seed for reproducibility and repeatability
     random.seed(42)
     np.random.seed(42)
     
@@ -686,7 +686,7 @@ def main():
         print(f"❌ Error generating report: {e}")
         report = None
     
-    # Step 3: Validate against human ratings (if available)
+    # Step 3: Validate against human ratings (if available) (DONT HAVE)
     print("\n🧪 Step 3: Statistical Validation...")
     try:
         validation_results = analyzer.validate_with_human_ratings()
@@ -700,7 +700,7 @@ def main():
         print(f"❌ Error in validation: {e}")
         validation_results = None
     
-    # Step 4: Bias analysis
+    # Step 4: Bias analysis (I DONT HAVE THIS)
     print("\n🔍 Step 4: Bias Analysis...")
     try:
         bias_analysis = analyzer.perform_bias_analysis()
