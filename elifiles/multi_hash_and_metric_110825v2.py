@@ -62,78 +62,64 @@ class SimpleFaceTester:
             'chebyshev': self.chebyshev_dist,    # 0 or 1
         }
 
-    # --- distances (all return float in [0,1]) ---
     def hamming_dist(self, h1: str, h2: str) -> float:
-        """Normalized Hamming distance using ImageHash-built-in subtraction."""
         try:
-            hash1 = imagehash.hex_to_hash(h1)
-            hash2 = imagehash.hex_to_hash(h2)
-            nbits = hash1.hash.size  # supports 8x8, 16x16, etc.
-            return (hash1 - hash2) / float(nbits)
+            x = self._bits_from_hex(h1); y = self._bits_from_hex(h2)
+            x, y = self._align_bits(x, y)
+            if x.size == 0: return 1.0
+            return float(np.mean(x != y))  # normalized [0,1]
         except Exception as e:
             print(f"Hamming distance error: {e}")
             return 1.0
 
     def euclidean_dist(self, h1: str, h2: str) -> float:
-        """Normalized L2 distance on bit vectors: sqrt(sum((x-y)^2)) / sqrt(N)."""
         try:
-            bits1 = imagehash.hex_to_hash(h1).hash.flatten().astype(np.float64)
-            bits2 = imagehash.hex_to_hash(h2).hash.flatten().astype(np.float64)
-            if bits1.size == 0 or bits2.size == 0 or bits1.size != bits2.size:
-                return 1.0
-            dist = np.linalg.norm(bits1 - bits2)
-            return float(dist / np.sqrt(bits1.size))
+            x = self._bits_from_hex(h1).astype(np.float64)
+            y = self._bits_from_hex(h2).astype(np.float64)
+            x, y = self._align_bits(x, y)
+            if x.size == 0: return 1.0
+            return float(np.linalg.norm(x - y) / np.sqrt(x.size))  # [0,1]
         except Exception as e:
             print(f"Euclidean distance error: {e}")
             return 1.0
 
     def chebyshev_dist(self, h1: str, h2: str, _algo_name: str | None = None) -> float:
-        """L∞ on binary bits: 0 if identical, 1 if any bit differs."""
         try:
-            x = self._bits_from_hex(h1)
-            y = self._bits_from_hex(h2)
-            if x.size == 0 or y.size == 0 or x.size != y.size:
-                return 1.0
-            return float(np.max(np.abs(x - y)))  # 0.0 or 1.0
+            x = self._bits_from_hex(h1); y = self._bits_from_hex(h2)
+            x, y = self._align_bits(x, y)
+            if x.size == 0: return 1.0
+            return float(np.max(np.abs(x - y)))  # 0 or 1
         except Exception as e:
             print(f"Chebyshev distance error: {e}")
             return 1.0
 
     def cosine_dist(self, h1: str, h2: str, _algo_name: str | None = None) -> float:
-        """Cosine distance (1 - cosine similarity) on bit vectors."""
         try:
             x = self._bits_from_hex(h1).astype(np.float32)
             y = self._bits_from_hex(h2).astype(np.float32)
-            if x.size == 0 or y.size == 0 or x.size != y.size:
-                return 1.0
-            n1 = np.linalg.norm(x)
-            n2 = np.linalg.norm(y)
-            if n1 == 0.0 or n2 == 0.0:
-                return 1.0
+            x, y = self._align_bits(x, y)
+            if x.size == 0: return 1.0
+            n1 = np.linalg.norm(x); n2 = np.linalg.norm(y)
+            if n1 == 0.0 or n2 == 0.0: return 1.0
             cos_sim = float(np.dot(x, y) / (n1 * n2))
-            cos_sim = max(0.0, min(1.0, cos_sim))  # clamp for safety
+            cos_sim = max(0.0, min(1.0, cos_sim))
             return 1.0 - cos_sim
         except Exception as e:
             print(f"Cosine distance error: {e}")
             return 1.0
 
     def jaccard_dist(self, h1: str, h2: str, _algo_name: str | None = None) -> float:
-        """Jaccard distance on sets of 1-bit positions: 1 - |A∩B|/|A∪B|."""
         try:
-            x = self._bits_from_hex(h1)
-            y = self._bits_from_hex(h2)
-            if x.size == 0 or y.size == 0 or x.size != y.size:
-                return 1.0
-            set1 = set(np.where(x == 1)[0])
-            set2 = set(np.where(y == 1)[0])
-            union = len(set1 | set2)
-            if union == 0:
-                return 0.0
-            inter = len(set1 & set2)
-            return 1.0 - (inter / union)
+            x = self._bits_from_hex(h1); y = self._bits_from_hex(h2)
+            x, y = self._align_bits(x, y)
+            if x.size == 0: return 1.0
+            A = set(np.where(x == 1)[0]); B = set(np.where(y == 1)[0])
+            U = len(A | B)
+            return 0.0 if U == 0 else 1.0 - (len(A & B) / U)
         except Exception as e:
             print(f"Jaccard distance error: {e}")
             return 1.0
+
     
     def _test_dinohash_availability(self):
         """Test if DinoHash is working using your proven method"""
@@ -155,11 +141,20 @@ class SimpleFaceTester:
         except Exception as e:
             print(f"⚠️  DinoHash test error: {str(e)[:50]}... - continuing without it")
             return False
-        
+    
+    def _align_bits(self, x, y):
+        if x.size == y.size:
+            return x, y
+        n = max(x.size, y.size)
+        if x.size < n:
+            x = np.concatenate([np.zeros(n - x.size, dtype=np.uint8), x])
+        if y.size < n:
+            y = np.concatenate([np.zeros(n - y.size, dtype=np.uint8), y])
+        return x, y
+
     def compute_dinohash(self, img):
-        """Compute DinoHash - save image temporarily and call external script"""
         try:
-            # 🔧 Ensure 3-channel RGB for DinoHash
+            # ensure 3-channel for Dino
             if img.mode != 'RGB':
                 img = img.convert('RGB')
 
@@ -173,12 +168,19 @@ class SimpleFaceTester:
                     cwd='/home/ssm-user/dinohash-perceptual-hash',
                     timeout=30
                 )
-                if result.returncode == 0:
-                    out = result.stdout.strip()
-                    return out or None
-                else:
+                if result.returncode != 0:
                     print(f"  ⚠️  DinoHash error: {result.stderr}")
                     return None
+
+                out = result.stdout.strip()
+                # extract hex after optional "0x" and label
+                m = re.search(r'0x([0-9a-fA-F]+)', out)
+                if not m:
+                    m = re.search(r'([0-9a-fA-F]{8,})$', out)
+                if not m:
+                    print(f"  ⚠️  Could not parse DinoHash from: {out[:80]}")
+                    return None
+                return m.group(1).lower()
             finally:
                 try: os.unlink(tmp_path)
                 except: pass
@@ -236,21 +238,18 @@ class SimpleFaceTester:
         hashes = {}
         for name, func in self.algorithms.items():
             try:
-                # hash_result = func(face_img)
                 if name == 'dinohash':
                     print(f"    Computing {name}...", end=" ")
-                
-                hash_result = func(face_img)
-                if hash_result is not None:
-                    hashes[name] = hash_result
-                    if name == 'dinohash':
-                        print("✓")
+                out = func(face_img)
+                if out is not None:
+                    hashes[name] = out
+                    if name == 'dinohash': print("✓")
                 else:
-                    if name == 'dinohash':
-                        print("✗")
+                    if name == 'dinohash': print("✗")
                     print(f"    ⚠️  {name} returned None")
             except Exception as e:
                 print(f"  ❌ {name} failed: {e}")
+
         return hashes
     
     def compare_faces(self, img1_path, img2_path, same_person=True):
