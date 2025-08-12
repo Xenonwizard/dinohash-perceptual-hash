@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Simplified Face Recognition Testing Framework
-Concise version with core functionality only
+Python 3.11+ Compatible Face Recognition Tester
+Fixed for strict method ordering in newer Python versions
 """
 
 import os
@@ -23,48 +23,142 @@ except ImportError:
     from scipy.spatial.distance import cityblock as manhattan
 
 class SimpleFaceTester:
-    """Simplified face recognition tester with essential algorithms and metrics"""
+    """Python 3.11+ compatible face tester with proper method ordering"""
     
     def __init__(self):
+        """Initialize with deferred method assignment for Python 3.11+ compatibility"""
+        self.detector = MTCNN()
+        self.results = []
+        
+        # Initialize algorithms after all methods are defined
+        self._setup_algorithms_and_metrics()
+    
+    def _setup_algorithms_and_metrics(self):
+        """Setup algorithms and metrics after all methods are defined"""
         # Core algorithms (most scientifically validated)
         self.algorithms = {
             'aHash': lambda img: str(imagehash.average_hash(img, 8)),
             'pHash': lambda img: str(imagehash.phash(img, 8)),        # Most cited
             'dHash': lambda img: str(imagehash.dhash(img, 8)),        # Most efficient
             'wHash': lambda img: str(imagehash.whash(img, 8)),        # Frequency domain
-            'dinohash': self._compute_dinohash,                       # Deep learning
+            'dinohash': self.compute_dinohash,                        # Deep learning
         }
         
         # Core distance metrics + best ones for DinoHash
         self.metrics = {
-            'hamming': self._hamming_dist,      # Standard for hashing
-            'euclidean': self._euclidean_dist,  # Good for embeddings
-            'manhattan': self._manhattan_dist,  # Robust to outliers
-            'cosine': self._cosine_dist,        # Best for high-dimensional (DinoHash)
-            'jaccard': self._jaccard_dist,      # Good for sparse binary
+            'hamming': self.hamming_dist,      # Standard for hashing
+            'euclidean': self.euclidean_dist,  # Good for embeddings
+            'cosine': self.cosine_dist,        # Best for high-dimensional (DinoHash)
+            'jaccard': self.jaccard_dist,      # Set-based similarity (binary features)
+            'chebyshev': self.chebyshev_dist,  # Maximum difference metric
         }
-        
-        self.detector = MTCNN()
-        self.results = []
     
-    def _hamming_dist(self, h1, h2):
+    def hamming_dist(self, h1, h2):
         """Hamming distance (normalized) - use ImageHash built-in"""
-        hash1 = imagehash.hex_to_hash(h1)
-        hash2 = imagehash.hex_to_hash(h2)
-        return (hash1 - hash2) / 64  # Normalized by 64 bits (8x8)
+        try:
+            hash1 = imagehash.hex_to_hash(h1)
+            hash2 = imagehash.hex_to_hash(h2)
+            return (hash1 - hash2) / 64  # Normalized by 64 bits (8x8)
+        except Exception as e:
+            print(f"Hamming distance error: {e}")
+            return 1.0
     
-    def _euclidean_dist(self, h1, h2):
-        """Euclidean distance using hash difference"""
-        hash1 = imagehash.hex_to_hash(h1)
-        hash2 = imagehash.hex_to_hash(h2)
-        hamming_dist = hash1 - hash2
-        return hamming_dist / 64  # Normalize by max possible distance
+    def euclidean_dist(self, h1, h2):
+        """Euclidean distance using proper L2 norm calculation"""
+        try:
+            # Convert hex hashes to bit arrays
+            hash1 = imagehash.hex_to_hash(h1)
+            hash2 = imagehash.hex_to_hash(h2)
+            
+            # Get the actual hash arrays (not just the difference count)
+            bits1 = hash1.hash.flatten().astype(np.float64)
+            bits2 = hash2.hash.flatten().astype(np.float64)
+            
+            # Calculate true Euclidean distance: sqrt(sum((x1-x2)^2))
+            squared_diffs = (bits1 - bits2) ** 2
+            euclidean_distance = np.sqrt(np.sum(squared_diffs))
+            
+            # Normalize by maximum possible distance (sqrt(64) for 8x8 hash)
+            max_distance = np.sqrt(len(bits1))
+            return euclidean_distance / max_distance
+            
+        except Exception as e:
+            print(f"Euclidean distance error: {e}")
+            return 1.0
     
-    def _manhattan_dist(self, h1, h2):
-        """Manhattan distance - same as hamming for binary data"""
-        return self._hamming_dist(h1, h2)
+    def chebyshev_dist(self, h1, h2):
+        """Chebyshev distance (L∞ norm) - maximum difference in any dimension"""
+        try:
+            # Convert hex hashes to arrays
+            bits1 = np.array([int(c, 16) for c in h1])
+            bits2 = np.array([int(c, 16) for c in h2])
+            
+            # Calculate Chebyshev distance (max absolute difference)
+            max_diff = np.max(np.abs(bits1 - bits2))
+            return max_diff / 15  # Normalize by max hex digit value
+        except Exception as e:
+            print(f"Chebyshev distance error: {e}")
+            return self.hamming_dist(h1, h2)
     
-    def _compute_dinohash(self, img):
+    def cosine_dist(self, h1, h2, algo_name=None):
+        """Cosine distance - optimized for DinoHash"""
+        try:
+            if algo_name == 'dinohash' and h1 and h2:
+                # DinoHash is hex string - convert to bit representation
+                try:
+                    bits1 = np.array([int(bit) for bit in bin(int(h1, 16))[2:].zfill(len(h1)*4)])
+                    bits2 = np.array([int(bit) for bit in bin(int(h2, 16))[2:].zfill(len(h2)*4)])
+                except ValueError:
+                    # Fallback for invalid hex
+                    return self.hamming_dist(h1, h2)
+            else:
+                # Traditional hashes - use hex digits as features
+                bits1 = np.array([int(c, 16) for c in h1])
+                bits2 = np.array([int(c, 16) for c in h2])
+            
+            # Calculate cosine distance
+            dot_product = np.dot(bits1, bits2)
+            norm1 = np.linalg.norm(bits1)
+            norm2 = np.linalg.norm(bits2)
+            
+            if norm1 == 0 or norm2 == 0:
+                return 1.0
+            
+            cosine_sim = dot_product / (norm1 * norm2)
+            return 1 - cosine_sim  # Convert to distance
+        except Exception as e:
+            print(f"Cosine distance error: {e}")
+            # Fallback to hamming distance
+            return self.hamming_dist(h1, h2)
+    
+    def jaccard_dist(self, h1, h2, algo_name=None):
+        """Jaccard distance - good for sparse binary features"""
+        try:
+            if algo_name == 'dinohash' and h1 and h2:
+                # DinoHash - convert hex to binary
+                try:
+                    bits1 = set([i for i, bit in enumerate(bin(int(h1, 16))[2:].zfill(len(h1)*4)) if bit == '1'])
+                    bits2 = set([i for i, bit in enumerate(bin(int(h2, 16))[2:].zfill(len(h2)*4)) if bit == '1'])
+                except ValueError:
+                    return self.hamming_dist(h1, h2)
+            else:
+                # Traditional hashes - find positions of '1' bits
+                hash_obj1 = imagehash.hex_to_hash(h1)
+                hash_obj2 = imagehash.hex_to_hash(h2)
+                bits1 = set([i for i, bit in enumerate(str(hash_obj1)) if bit == '1'])
+                bits2 = set([i for i, bit in enumerate(str(hash_obj2)) if bit == '1'])
+            
+            intersection = len(bits1 & bits2)
+            union = len(bits1 | bits2)
+            
+            if union == 0:
+                return 0.0
+            return 1 - (intersection / union)
+        except Exception as e:
+            print(f"Jaccard distance error: {e}")
+            return self.hamming_dist(h1, h2)
+    
+    def compute_dinohash(self, img):
         """Compute DinoHash - save image temporarily and call external script"""
         try:
             with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp_file:
@@ -82,9 +176,13 @@ class SimpleFaceTester:
                 )
                 
                 if result.returncode == 0:
-                    return result.stdout.strip()
+                    hash_result = result.stdout.strip()
+                    if hash_result:
+                        return hash_result
+                    else:
+                        return None
                 else:
-                    print(f"DinoHash error: {result.stderr}")
+                    print(f"  ⚠️  DinoHash error: {result.stderr}")
                     return None
             finally:
                 # Clean up temp file
@@ -94,7 +192,7 @@ class SimpleFaceTester:
                     pass
                     
         except Exception as e:
-            print(f"DinoHash failed: {e}")
+            print(f"  ⚠️  DinoHash failed: {e}")
             return None
     
     def extract_face(self, img_path):
@@ -261,13 +359,14 @@ class SimpleFaceTester:
 
 
 def main():
-    """Main function - simplified workflow"""
+    """Main function - Python 3.11+ compatible workflow"""
     
     # Configuration
-    folder_path = "./images/ronnychieng/"  # Updated path
+    folder_path = "./images/ronnychieng/"  # Update this path
     max_pairs = 20  # Limit for quick testing
     
-    print("=== Simplified Face Recognition Tester ===")
+    print("=== Python 3.11+ Face Recognition Tester ===")
+    print(f"Python version: {os.sys.version}")
     print(f"Testing folder: {folder_path}")
     
     # Check folder
@@ -277,6 +376,7 @@ def main():
         return
     
     # Initialize and run tests
+    print("Initializing tester...")
     tester = SimpleFaceTester()
     
     print(f"Algorithms: {list(tester.algorithms.keys())}")
