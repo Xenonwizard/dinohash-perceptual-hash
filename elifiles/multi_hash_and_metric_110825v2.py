@@ -159,39 +159,33 @@ class SimpleFaceTester:
     def compute_dinohash(self, img):
         """Compute DinoHash - save image temporarily and call external script"""
         try:
+            # 🔧 Ensure 3-channel RGB for DinoHash
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+
             with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp_file:
                 img.save(tmp_file.name, 'JPEG')
                 tmp_path = tmp_file.name
-            
             try:
-                result = subprocess.run([
-                    'python3', 'hashes/dinohash.py', tmp_path
-                ], 
-                capture_output=True, 
-                text=True, 
-                cwd='/home/ssm-user/dinohash-perceptual-hash',
-                timeout=30  # 30 second timeout
+                result = subprocess.run(
+                    ['python3', 'hashes/dinohash.py', tmp_path],
+                    capture_output=True, text=True,
+                    cwd='/home/ssm-user/dinohash-perceptual-hash',
+                    timeout=30
                 )
-                
                 if result.returncode == 0:
-                    hash_result = result.stdout.strip()
-                    if hash_result:
-                        return hash_result
-                    else:
-                        return None
+                    out = result.stdout.strip()
+                    return out or None
                 else:
                     print(f"  ⚠️  DinoHash error: {result.stderr}")
                     return None
             finally:
-                # Clean up temp file
-                try:
-                    os.unlink(tmp_path)
-                except:
-                    pass
-                    
+                try: os.unlink(tmp_path)
+                except: pass
         except Exception as e:
             print(f"  ⚠️  DinoHash failed: {e}")
             return None
+
     
     def extract_face(self, img_path):
         """Extract and preprocess face"""
@@ -242,7 +236,7 @@ class SimpleFaceTester:
         hashes = {}
         for name, func in self.algorithms.items():
             try:
-                hash_result = func(face_img)
+                # hash_result = func(face_img)
                 if name == 'dinohash':
                     print(f"    Computing {name}...", end=" ")
                 
