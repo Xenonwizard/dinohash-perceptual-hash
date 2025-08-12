@@ -59,7 +59,7 @@ class SimpleFaceTester:
             'euclidean': self.euclidean_dist,    # normalized [0,1]
             'cosine': self.cosine_dist,          # normalized [0,1]
             'jaccard': self.jaccard_dist,        # normalized [0,1]
-            'chebyshev': self.chebyshev_dist,    # 0 or 1
+            # 'chebyshev': self.chebyshev_dist,    # 0 or 1
         }
 
     def hamming_dist(self, h1: str, h2: str) -> float:
@@ -310,51 +310,44 @@ class SimpleFaceTester:
             self.compare_faces(img1, img2, same_person=True)
     
     def analyze_results(self):
-        """Analyze and return performance results"""
+        """Summarize distances for positives-only (no F1/accuracy)."""
         if not self.results:
             print("No results to analyze")
             return pd.DataFrame()
-        
+
         df = pd.DataFrame(self.results)
-        performance = []
-        
+        rows = []
         for algo in df['algorithm'].unique():
             for metric in df['metric'].unique():
-                subset = df[(df['algorithm'] == algo) & (df['metric'] == metric)]
-                if len(subset) < 3:
+                sub = df[(df['algorithm'] == algo) & (df['metric'] == metric)]
+                if len(sub) < 3:
                     continue
-                
-                distances = subset['distance'].values
-                labels = subset['same_person'].values
-                
-                # Find optimal threshold using median
-                threshold = np.median(distances)
-                predictions = distances <= threshold
-                
-                # Calculate metrics
-                accuracy = accuracy_score(labels, predictions)
-                f1 = f1_score(labels, predictions, zero_division=0)
-                
-                performance.append({
+                d = sub['distance'].values
+                rows.append({
                     'algorithm': algo,
                     'metric': metric,
-                    'accuracy': accuracy,
-                    'f1_score': f1,
-                    'threshold': threshold,
-                    'avg_distance': np.mean(distances),
-                    'std_distance': np.std(distances),
-                    'n_samples': len(subset)
+                    'avg_distance': float(np.mean(d)),
+                    'std_distance': float(np.std(d)),
+                    'median_distance': float(np.median(d)),
+                    'p25': float(np.percentile(d, 25)),
+                    'p75': float(np.percentile(d, 75)),
+                    'min': float(np.min(d)),
+                    'max': float(np.max(d)),
+                    'n_samples': int(len(sub)),
                 })
-        
-        return pd.DataFrame(performance).sort_values('f1_score', ascending=False)
+        if not rows:
+            return pd.DataFrame()
+        # Sort ascending (lower distance = better for same-person pairs)
+        return pd.DataFrame(rows).sort_values(['avg_distance', 'std_distance'], ascending=[True, True])
+
     
     def save_results(self, output_file="face_test_results.csv"):
-        """Save results to CSV"""
         perf_df = self.analyze_results()
         if len(perf_df) > 0:
             perf_df.to_csv(output_file, index=False)
             print(f"Results saved to: {output_file}")
         return perf_df
+
 
 
 def main():
