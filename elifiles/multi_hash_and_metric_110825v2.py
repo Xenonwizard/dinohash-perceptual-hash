@@ -49,9 +49,11 @@ class SimpleFaceTester:
             'aHash': lambda img: str(imagehash.average_hash(img, 8)),
             'pHash': lambda img: str(imagehash.phash(img, 8)),
             'dHash': lambda img: str(imagehash.dhash(img, 8)),
-            'wHash': lambda img: str(imagehash.whash(img, 8)),
-            'dinohash': self.compute_dinohash,  # returns hex string (binarized)
+            'wHash': lambda img: str(imagehash.whash(img, 8))
+            # 'dinohash': self.compute_dinohash,  # returns hex string (binarized)
         }
+        self._test_dinohash_availability()
+
         self.metrics = {
             'hamming': self.hamming_dist,        # normalized [0,1]
             'euclidean': self.euclidean_dist,    # normalized [0,1]
@@ -133,6 +135,27 @@ class SimpleFaceTester:
             print(f"Jaccard distance error: {e}")
             return 1.0
     
+    def _test_dinohash_availability(self):
+        """Test if DinoHash is working using your proven method"""
+        try:
+            print("🧪 Testing DinoHash availability...")
+            
+            # Create a small test image
+            test_img = Image.new('RGB', (64, 64), color='white')
+            result = self.compute_dinohash(test_img)
+            
+            if result is not None:
+                print("✅ DinoHash is available and working!")
+                self.algorithms['dinohash'] = self.compute_dinohash
+                return True
+            else:
+                print("⚠️  DinoHash test failed - using traditional algorithms only")
+                return False
+                
+        except Exception as e:
+            print(f"⚠️  DinoHash test error: {str(e)[:50]}... - continuing without it")
+            return False
+        
     def compute_dinohash(self, img):
         """Compute DinoHash - save image temporarily and call external script"""
         try:
@@ -220,10 +243,18 @@ class SimpleFaceTester:
         for name, func in self.algorithms.items():
             try:
                 hash_result = func(face_img)
+                if name == 'dinohash':
+                    print(f"    Computing {name}...", end=" ")
+                
+                hash_result = func(face_img)
                 if hash_result is not None:
                     hashes[name] = hash_result
+                    if name == 'dinohash':
+                        print("✓")
                 else:
-                    print(f"  ⚠️  {name} returned None")
+                    if name == 'dinohash':
+                        print("✗")
+                    print(f"    ⚠️  {name} returned None")
             except Exception as e:
                 print(f"  ❌ {name} failed: {e}")
         return hashes
