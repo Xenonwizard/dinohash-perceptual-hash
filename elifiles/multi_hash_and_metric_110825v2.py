@@ -383,26 +383,30 @@ def main():
     results_df = tester.save_results()
     
     if len(results_df) > 0:
-        print("\nTop 5 combinations by F1-score:")
-        print(results_df.head()[['algorithm', 'metric', 'f1_score', 'accuracy']].round(3))
-        
-        print(f"\nBest overall: {results_df.iloc[0]['algorithm']} + {results_df.iloc[0]['metric']}")
-        print(f"F1-score: {results_df.iloc[0]['f1_score']:.3f}")
-        print(f"Accuracy: {results_df.iloc[0]['accuracy']:.3f}")
-        
-        # Algorithm rankings
-        algo_scores = results_df.groupby('algorithm')['f1_score'].mean().sort_values(ascending=False)
-        print(f"\nAlgorithm rankings:")
+        # Columns now: algorithm, metric, avg_distance, std_distance, median_distance, p25, p75, min, max, n_samples
+        keep_cols = ["algorithm", "metric", "avg_distance", "std_distance", "median_distance", "p25", "p75", "n_samples"]
+
+        print("\nTop 5 combinations by lowest avg_distance:")
+        top5 = results_df.sort_values(["avg_distance", "std_distance"], ascending=[True, True]).head()
+        print(top5[keep_cols].round(3))
+
+        best = top5.iloc[0]
+        print(f"\nBest overall: {best['algorithm']} + {best['metric']}")
+        print(f"Avg distance: {best['avg_distance']:.3f} | Median: {best['median_distance']:.3f} | Std: {best['std_distance']:.3f}")
+
+        # Rankings (lower avg_distance = better)
+        algo_scores = results_df.groupby("algorithm")["avg_distance"].mean().sort_values(ascending=True)
+        print("\nAlgorithm rankings (by mean avg_distance):")
         for algo, score in algo_scores.items():
             print(f"  {algo}: {score:.3f}")
-        
-        # Metric rankings  
-        metric_scores = results_df.groupby('metric')['f1_score'].mean().sort_values(ascending=False)
-        print(f"\nMetric rankings:")
+
+        metric_scores = results_df.groupby("metric")["avg_distance"].mean().sort_values(ascending=True)
+        print("\nMetric rankings (by mean avg_distance):")
         for metric, score in metric_scores.items():
             print(f"  {metric}: {score:.3f}")
-    
+
     print("\n=== Test Complete ===")
+    
 
 
 if __name__ == "__main__":
